@@ -15,7 +15,7 @@ public:
 
     void move(int steps, int boardSize);
     void adjustMoney(int amount);
-    void addProperty(Cell* property);
+    void addProperty(Cell *property);
 
     const QString &getName() const;
     int getMoney() const;

@@ -18,7 +18,7 @@ void Player::adjustMoney(int amount)
     }
 }
 
-void Player::addProperty(Cell* property)
+void Player::addProperty(Cell *property)
 {
     properties.push_back(property);
 }
