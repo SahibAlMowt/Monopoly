@@ -1,0 +1,7 @@
+*.exe
+build/
+.vscode/
+*.user
+*.o
+*.out
+.idea/
