@@ -5,15 +5,18 @@
 
 class Cell;
 
-class Board {
+class Board
+{
+
 public:
     Board();
     ~Board();
 
-    Cell* getCell(int index) const;
+    Cell *getCell(int index) const;
     int size() const;
 
 private:
+
     std::vector<Cell*> cells;
 };
 

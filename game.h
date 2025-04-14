@@ -1,5 +1,5 @@
-#ifndef GAMECONTROLLER_H
-#define GAMECONTROLLER_H
+#ifndef GAME_H
+#define GAME_H
 
 #include <vector>
 #include <QString>
@@ -27,4 +27,4 @@ private:
     int rollDice() const;
 };
 
-#endif // GAMECONTROLLER_H
+#endif // GAME_H
