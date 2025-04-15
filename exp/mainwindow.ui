@@ -27,6 +27,19 @@
      <string>Start Game</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="quit_main_menu">
+    <property name="geometry">
+     <rect>
+      <x>319</x>
+      <y>300</y>
+      <width>181</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Quit Game</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

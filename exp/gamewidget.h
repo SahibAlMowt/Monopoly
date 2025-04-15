@@ -2,6 +2,7 @@
 #define GAMEWIDGET_H
 
 #include <QDialog>
+#include <QHBoxLayout>
 
 namespace Ui
 {
@@ -28,6 +29,10 @@ private slots:
 private:
 
     Ui::Dialog *ui;
+
+    QWidget *central;
+    QHBoxLayout *bottomRowLayout;
+
 };
 
 

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QApplication>
 #include "gamewidget.h"
 
 QT_BEGIN_NAMESPACE
@@ -31,6 +32,5 @@ private:
 
     Ui::MainWindow *ui;
     GameWindow *gameWindow = nullptr;
-
 };
 #endif // MAINWINDOW_H

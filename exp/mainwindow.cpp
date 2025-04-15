@@ -5,9 +5,11 @@
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    ui -> setupUi(this);
 
-    connect(ui->start_game_button, &QPushButton::clicked, this, &MainWindow::start_game_button);
+    connect(ui -> start_game_button, &QPushButton::clicked, this, &MainWindow::start_game_button);
+
+    connect(ui -> quit_main_menu, &QPushButton::clicked, qApp, &QApplication::quit);
 }
 
 MainWindow::~MainWindow()
@@ -28,3 +30,5 @@ void MainWindow::start_game_button()
 
     this -> hide();
 }
+
+
