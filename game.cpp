@@ -29,7 +29,6 @@ void GameController::addPlayer(const QString &name)
 
 void GameController::startGame()
 {
-    std::cout << "Start of gaming!\n";
     while (true)
     {
         nextTurn();
