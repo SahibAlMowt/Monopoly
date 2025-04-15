@@ -21,8 +21,10 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 
     QWidget *central = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(central);
+
     layout -> addWidget(gameWidget);
     layout -> addWidget(rollButton);
+
     setCentralWidget(central);
 }
 

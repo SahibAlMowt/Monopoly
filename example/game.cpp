@@ -29,7 +29,7 @@ void GameController::addPlayer(const QString &name)
 
 void GameController::startGame()
 {
-    while (true)
+    while(true)
     {
         nextTurn();
     }
@@ -44,7 +44,7 @@ void GameController::nextTurn()
 
     Player *player = players[currentPlayerIndex];
 
-    if (player->isBankrupt())
+    if (player -> isBankrupt())
     {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         return;

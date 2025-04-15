@@ -9,14 +9,14 @@
 
 GameWidget::GameWidget(GameController *controller, QWidget *parent): QWidget(parent), controller(controller)
 {
-    setMinimumSize(400, 400);
+    setMinimumSize(800, 600);
 }
 
 void GameWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     int cellSize = width() / 5;
-    Board *board = controller->getBoard();
+    Board *board = controller -> getBoard();
 
     for (int i = 0; i < board -> size(); i++)
     {
@@ -31,7 +31,8 @@ void GameWidget::paintEvent(QPaintEvent *)
 
 
     const auto &players = controller -> getPlayers();
-    for (int i = 0; i < players.size(); i++)
+
+    for (int i = 0; i < static_cast<int>(players.size()); i++)
     {
         Player *p = players[i];
         int pos = p -> getPosition();
