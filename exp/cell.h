@@ -4,13 +4,34 @@
 #include <QLabel>
 #include <QFrame>
 
+struct CellInfo
+{
+    QString name;
+    int price;
+    QString imagePath;
+};
+
+enum class CellType
+{
+    Corner,
+    Horizontal,
+    Vertical
+};
+
+
 class CellWidget : public QFrame
 {
     Q_OBJECT
 
 public:
 
-    explicit CellWidget(const QString &name, QWidget *parent = nullptr);
+    explicit CellWidget(const CellInfo &info, CellType type, QWidget *parent = nullptr);
+
+private:
+
+    QLabel *imageLabel;
+    QLabel *nameLabel;
+    QLabel *priceLabel;
 
 };
 

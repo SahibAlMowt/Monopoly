@@ -6,44 +6,88 @@ GameWindow::GameWindow(QWidget *parent) :QDialog(parent),ui(new Ui::Dialog)
 {
     ui -> setupUi(this);
 
+  //  setFixedSize(1000, 900);
+
+    QVector<CellInfo> cells =
+    {
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" },
+        { "Ok", 400, "../../pagani_zonda.jpg" }
+    };
+
     const int size = 10;
-
     QGridLayout *grid = new QGridLayout(this);
-    grid->setSpacing(0);
-    grid->setContentsMargins(0, 0, 0, 0);
 
-    int index = 1;
+    grid -> setSpacing(0);
+    grid -> setContentsMargins(5, 5, 5, 5);
 
-    grid->addWidget(new CellWidget("Ячейка " + QString::number(0)), size - 1, size - 1);
-    grid->addWidget(new CellWidget("Ячейка " + QString::number(9)), size - 1, 0);
-    grid->addWidget(new CellWidget("Ячейка " + QString::number(18)), 0, 0);
-    grid->addWidget(new CellWidget("Ячейка " + QString::number(27)), 0, size - 1);
+    int index = 0;
 
-    for (int i = size - 2; i > 0; i--)
+    for (int col = size - 1; col >= 0; col--)
     {
-        grid->addWidget(new CellWidget("Ячейка " + QString::number(index++)), size - 1, i);
+        CellType type = (col == size - 1 || col == 0) ? CellType::Corner : CellType::Horizontal;
+        grid -> addWidget(new CellWidget(cells[index], type), size - 1, col);
+        index++;
     }
 
-    index++;
-
-    for (int i = size - 2; i > 0; i--)
+    for (int row = size - 2; row >= 0; row--)
     {
-        grid->addWidget(new CellWidget("Ячейка " + QString::number(index++)), i, 0);
+        CellType type = (row == 0) ? CellType::Corner : CellType::Vertical;
+        grid -> addWidget(new CellWidget(cells[index], type), row, 0);
+        index++;
     }
 
-    index++;
-
-    for (int i = 1; i < size - 1; i++)
+    for (int col = 1; col < size; col++)
     {
-        grid->addWidget(new CellWidget("Ячейка " + QString::number(index++)), 0, i);
+        CellType type = (col == size - 1) ? CellType::Corner : CellType::Horizontal;
+        grid -> addWidget(new CellWidget(cells[index], type), 0, col);
+        index++;
     }
 
-    index++;
-
-    for (int i = 1; i < size - 1; i++)
+    for (int row = 1; row < size - 1; row++)
     {
-        grid->addWidget(new CellWidget("Ячейка " + QString::number(index++)), i, size - 1);
+        CellType type = CellType::Vertical;
+        grid -> addWidget(new CellWidget(cells[index], type), row, size - 1);
+        index++;
     }
+
 }
 
 GameWindow::~GameWindow()

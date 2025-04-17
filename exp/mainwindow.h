@@ -3,6 +3,11 @@
 
 #include <QMainWindow>
 #include <QApplication>
+#include <QMediaPlayer>
+#include <QSlider>
+#include <QMediaPlayer>
+#include <QSlider>
+
 #include "gamewidget.h"
 
 QT_BEGIN_NAMESPACE
@@ -28,9 +33,16 @@ private slots:
 
     void start_game_button();
 
+    void play_audio();
+    void stop_audio();
+    void set_volume_audio(int volume);
+
 private:
 
     Ui::MainWindow *ui;
     GameWindow *gameWindow = nullptr;
+
+    QMediaPlayer *player;
+
 };
 #endif // MAINWINDOW_H
