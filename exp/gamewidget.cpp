@@ -2,7 +2,7 @@
 #include "ui_gamewidget.h"
 #include "cell.h"
 
-GameWindow::GameWindow(QWidget *parent) :QDialog(parent),ui(new Ui::Dialog)
+GameWindow::GameWindow(QWidget *parent) :QDialog(parent),ui(new Ui::Game)
 {
     ui -> setupUi(this);
 

@@ -42,7 +42,7 @@ void MainWindow::start_game_button()
         connect(gameWindow, &GameWindow::return_to_menu, this, &MainWindow::show);
     }
 
-    gameWindow -> show();
+    gameWindow -> showFullScreen();
 
     this -> hide();
 }

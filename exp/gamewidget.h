@@ -6,7 +6,7 @@
 
 namespace Ui
 {
-    class Dialog;
+    class Game;
 }
 
 class GameWindow : public QDialog
@@ -28,7 +28,7 @@ private slots:
 
 private:
 
-    Ui::Dialog *ui;
+    Ui::Game *ui;
 
     QWidget *central;
     QHBoxLayout *bottomRowLayout;

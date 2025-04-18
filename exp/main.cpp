@@ -8,10 +8,6 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
- //   AudioPlayer audio;
-
-  //  audio.playSound("../../mortals.mp3");
-
     MainWindow w;
 
     w.show();
