@@ -25,7 +25,7 @@ class CellWidget : public QFrame
 
 public:
 
-    explicit CellWidget(const CellInfo &info, CellType type, QWidget *parent = nullptr);
+    explicit CellWidget(const CellInfo &info, QWidget *parent = nullptr);
 
 private:
 
