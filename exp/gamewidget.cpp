@@ -1,6 +1,7 @@
 #include "gamewidget.h"
 #include "ui_gamewidget.h"
 #include "cell.h"
+
 #include <QScreen>
 #include <QGridLayout>
 #include <QPushButton>
@@ -163,7 +164,15 @@ GameWindow::GameWindow(QWidget *parent) : QDialog(parent), ui(new Ui::Game)
 
     // Set the layout - no additional buttons since they're in the UI file
     setLayout(mainLayout);
+
+
+    player1 = new Player("P1", Qt::blue, this);
+
+    player1 -> moveToCell(1);
+
+    boardLayout -> addWidget(player1);
 }
+
 
 GameWindow::~GameWindow()
 {
@@ -173,5 +182,5 @@ GameWindow::~GameWindow()
 void GameWindow::on_quit_button_clicked()
 {
     emit return_to_menu();
-    this->hide();
+    this -> hide();
 }

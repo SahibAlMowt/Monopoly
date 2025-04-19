@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QHBoxLayout>
 
+#include "player.h"
+
 namespace Ui
 {
     class Game;
@@ -32,6 +34,8 @@ private:
 
     QWidget *central;
     QHBoxLayout *bottomRowLayout;
+
+    Player* player1;
 
 };
 

@@ -12,12 +12,14 @@ SOURCES += \
     cell.cpp \
     gamewidget.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    player.cpp
 
 HEADERS += \
     cell.h \
     gamewidget.h \
-    mainwindow.h
+    mainwindow.h \
+    player.h
 
 FORMS += \
     gamewidget.ui \

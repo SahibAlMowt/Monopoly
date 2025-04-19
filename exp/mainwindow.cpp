@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     connect(ui -> stop_audio, &QPushButton::clicked, this, &MainWindow::stop_audio);
 
 
-    ui -> slide_audio -> setValue(50); // Начальная громкость 50%
+    ui -> slide_audio -> setValue(50);
     connect(ui -> slide_audio, &QSlider::valueChanged, this, &MainWindow::set_volume_audio);
 
     player->setMedia(QUrl::fromLocalFile("../../mortals.mp3"));

@@ -18,7 +18,10 @@ CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent)
     nameLabel -> setAlignment(Qt::AlignCenter);
     layout -> addWidget(nameLabel);
 
-    QLabel *priceLabel = new QLabel(QString::number(info.price) + "₼");
-    priceLabel -> setAlignment(Qt::AlignCenter);
-    layout -> addWidget(priceLabel);
+    if(info.price != 0)
+    {
+        QLabel *priceLabel = new QLabel(QString::number(info.price) + "₼");
+        priceLabel -> setAlignment(Qt::AlignCenter);
+        layout -> addWidget(priceLabel);
+    }
 }
