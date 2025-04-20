@@ -19,11 +19,11 @@ void Player::moveTo(QLayout *layout, int row, int col)
 
     QLayoutItem *item = grid -> itemAtPosition(row, col);
 
-    if (item && item->widget())
+    if (item && item -> widget())
     {
-        QWidget *cell = item->widget();
-        this->setParent(cell);
-        this->move(5, 5);
-        this->show();
+        QWidget *cell = item -> widget();
+        this -> setParent(cell);
+        this -> move(5, 5);
+        this -> show();
     }
 }
