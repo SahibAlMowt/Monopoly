@@ -6,6 +6,11 @@
 #include <QGridLayout>
 #include <QPushButton>
 
+//#include <QDebug>  <--- important thing
+
+#include <QRandomGenerator>
+#include <QTimer>
+
 GameWindow::GameWindow(QWidget *parent) : QDialog(parent), ui(new Ui::Game)
 {
     ui->setupUi(this);
@@ -83,7 +88,7 @@ GameWindow::GameWindow(QWidget *parent) : QDialog(parent), ui(new Ui::Game)
     mainLayout->setContentsMargins(0, 0, 0, 0); // Remove all margins to maximize space
 
     // Create game board grid
-    QGridLayout *boardLayout = new QGridLayout();
+    boardLayout = new QGridLayout();
     boardLayout->setSpacing(0);
     boardLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -165,12 +170,55 @@ GameWindow::GameWindow(QWidget *parent) : QDialog(parent), ui(new Ui::Game)
     // Set the layout - no additional buttons since they're in the UI file
     setLayout(mainLayout);
 
+    // sudo rm rf /
 
-    player1 = new Player("P1", Qt::blue, this);
+    for(int i = 0; i <= 10; i++)
+    {
+        path.append({10, 10 - i});
+    }
 
-    player1 -> moveToCell(1);
+    for(int i = 1; i <= 9; i++)
+    {
+        path.append({10 - i, 0});
+    }
 
-    boardLayout -> addWidget(player1);
+    path.append({0, 0});
+
+    for(int i = 1; i <= 10; i++)
+    {
+        path.append({0, i});
+    }
+
+    for(int i = 1; i <= 9; i++)
+    {
+        path.append({i, 10});
+    }
+
+    player1 = new Player(boardContainer);
+
+    auto [row, col] = path[player_index];
+    QLayoutItem *item = boardLayout -> itemAtPosition(row, col);
+
+    if (item && item -> widget())
+    {
+        QWidget *cell = item -> widget();
+        player1 -> setParent(cell);
+        player1 -> move(5, 5);
+        player1 -> show();
+    }
+
+    connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
+
+    cube_label_1 = new QLabel(this);
+    cube_label_2 = new QLabel(this);
+
+    cube_label_1 -> setScaledContents(true);
+    cube_label_2 -> setScaledContents(true);
+
+    cube_label_1 -> setVisible(false);
+    cube_label_2 ->setVisible(false);
+
+    connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
 }
 
 
@@ -184,3 +232,83 @@ void GameWindow::on_quit_button_clicked()
     emit return_to_menu();
     this -> hide();
 }
+
+void GameWindow::move_player(int steps)
+{
+    player_index = (player_index + steps) % path.size();
+    auto [row, col] = path[player_index];
+    player1 -> moveTo(boardLayout, row, col);
+}
+
+QStringList cube_images =
+{
+    "../../resources/cube_1.png",
+    "../../resources/cube_2.png",
+    "../../resources/cube_3.png",
+    "../../resources/cube_4.png",
+    "../../resources/cube_5.png",
+    "../../resources/cube_6.png"
+};
+
+
+void GameWindow::start_cubes_roll()
+{
+    QSize cube_size(100, 100);
+    int spacing = 20;
+
+    int totalWidth = cube_size.width() * 2 + spacing;
+    int x = (width() - totalWidth) / 2;
+    int y = (height() - cube_size.height()) / 2;
+
+    cube_label_1 -> setGeometry(x, y, cube_size.width(), cube_size.height());
+    cube_label_2 -> setGeometry(x + cube_size.width() + spacing, y, cube_size.width(), cube_size.height());
+
+    cube_label_1 -> setVisible(true);
+    cube_label_2 -> setVisible(true);
+    cube_label_1 -> raise(); // <--- also important thing
+    cube_label_2 -> raise();
+
+    int roll_animation_step = 0;
+    int max_roll_steps = 10;
+    QTimer *cube_roll_timer = new QTimer(this);
+
+    connect(cube_roll_timer, &QTimer::timeout, this, [=]() mutable
+    {
+        if (roll_animation_step < max_roll_steps)
+        {
+            int random1 = QRandomGenerator::global() -> bounded(1, 7);
+            int random2 = QRandomGenerator::global() -> bounded(1, 7);
+
+            cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+            roll_animation_step++;
+        }
+        else
+        {
+            cube_roll_timer -> stop();
+            cube_roll_timer -> deleteLater();
+
+            int final1 = QRandomGenerator::global()->bounded(1, 7);
+            int final2 = QRandomGenerator::global()->bounded(1, 7);
+
+            cube_label_1 -> setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            cube_label_2 -> setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+            QTimer::singleShot(2200, this, [=]()
+            {
+                cube_label_1->setVisible(false);
+                cube_label_2->setVisible(false);
+
+                move_player(final1 + final2);
+            });
+        }
+    });
+
+    cube_roll_timer -> start(100);
+}
+
+
+
+
+
