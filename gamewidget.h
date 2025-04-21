@@ -17,7 +17,7 @@ class GameWindow : public QDialog
 
 public:
 
-    explicit GameWindow(QWidget *parent = nullptr);
+    explicit GameWindow(int playerCount = 1, QWidget *parent = nullptr);
     ~GameWindow();
 
 signals:
@@ -51,6 +51,11 @@ private:
     int currentDiceValue = 1;
 
     QGridLayout *boardLayout;
+
+    QVector<Player*> players;
+    int currentPlayerIndex = 0;
+
+
 
 };
 

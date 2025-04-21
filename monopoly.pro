@@ -19,7 +19,8 @@ HEADERS += \
     cell.h \
     gamewidget.h \
     mainwindow.h \
-    player.h
+    player.h \
+    playerdialog.h
 
 FORMS += \
     gamewidget.ui \

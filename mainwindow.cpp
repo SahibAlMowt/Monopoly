@@ -2,7 +2,9 @@
 #include "ui_mainwindow.h"
 #include "gamewidget.h"
 
-#include <QDebug>
+#include "playerdialog.h"
+
+//#include <QDebug>
 
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow)
@@ -20,8 +22,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     ui -> slide_audio -> setValue(50);
     connect(ui -> slide_audio, &QSlider::valueChanged, this, &MainWindow::set_volume_audio);
 
-    player->setMedia(QUrl::fromLocalFile("../../mortals.mp3"));
-    player->setVolume(50);
+    player -> setMedia(QUrl::fromLocalFile("../../mortals.mp3"));
+    player -> setVolume(50);
 
     connect(ui -> start_game_button, &QPushButton::clicked, this, &MainWindow::start_game_button);
 
@@ -33,19 +35,41 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// void MainWindow::start_game_button()
+// {
+//     if (!gameWindow)
+//     {
+//         gameWindow = new GameWindow(this);
+
+//         connect(gameWindow, &GameWindow::return_to_menu, this, &MainWindow::show);
+//     }
+
+//     gameWindow -> showFullScreen();
+
+//     this -> hide();
+// }
+
 void MainWindow::start_game_button()
 {
-    if (!gameWindow)
+    PlayerSelectDialog dialog(this);
+
+    if (dialog.exec() == QDialog::Accepted && !gameWindow)
     {
-        gameWindow = new GameWindow(this);
+        int playerCount = dialog.getPlayerCount();
+
+        gameWindow = new GameWindow(playerCount, nullptr);
 
         connect(gameWindow, &GameWindow::return_to_menu, this, &MainWindow::show);
     }
 
-    gameWindow -> showFullScreen();
+    //-------------
+
+    gameWindow -> show();
 
     this -> hide();
 }
+
+
 
 void MainWindow::play_audio()
 {

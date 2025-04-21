@@ -11,7 +11,7 @@
 #include <QRandomGenerator>
 #include <QTimer>
 
-GameWindow::GameWindow(QWidget *parent) : QDialog(parent), ui(new Ui::Game)
+GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(new Ui::Game)
 {
     ui->setupUi(this);
 
@@ -241,13 +241,13 @@ void GameWindow::move_player(int steps)
 }
 
 QStringList cube_images =
-{
-    "../../resources/cube_1.png",
-    "../../resources/cube_2.png",
-    "../../resources/cube_3.png",
-    "../../resources/cube_4.png",
-    "../../resources/cube_5.png",
-    "../../resources/cube_6.png"
+    {
+        "../../resources/cube_1.png",
+        "../../resources/cube_2.png",
+        "../../resources/cube_3.png",
+        "../../resources/cube_4.png",
+        "../../resources/cube_5.png",
+        "../../resources/cube_6.png"
 };
 
 
@@ -273,41 +273,40 @@ void GameWindow::start_cubes_roll()
     QTimer *cube_roll_timer = new QTimer(this);
 
     connect(cube_roll_timer, &QTimer::timeout, this, [=]() mutable
-    {
-        if (roll_animation_step < max_roll_steps)
-        {
-            int random1 = QRandomGenerator::global() -> bounded(1, 7);
-            int random2 = QRandomGenerator::global() -> bounded(1, 7);
-
-            cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-            cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-
-            roll_animation_step++;
-        }
-        else
-        {
-            cube_roll_timer -> stop();
-            cube_roll_timer -> deleteLater();
-
-            int final1 = QRandomGenerator::global()->bounded(1, 7);
-            int final2 = QRandomGenerator::global()->bounded(1, 7);
-
-            cube_label_1 -> setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-            cube_label_2 -> setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-
-            QTimer::singleShot(2200, this, [=]()
             {
-                cube_label_1->setVisible(false);
-                cube_label_2->setVisible(false);
+                if (roll_animation_step < max_roll_steps)
+                {
+                    int random1 = QRandomGenerator::global() -> bounded(1, 7);
+                    int random2 = QRandomGenerator::global() -> bounded(1, 7);
 
-                move_player(final1 + final2);
+                    cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+                    roll_animation_step++;
+                }
+                else
+                {
+                    cube_roll_timer -> stop();
+                    cube_roll_timer -> deleteLater();
+
+                    int final1 = QRandomGenerator::global()->bounded(1, 7);
+                    int final2 = QRandomGenerator::global()->bounded(1, 7);
+
+                    cube_label_1 -> setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cube_label_2 -> setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+                    QTimer::singleShot(2200, this, [=]()
+                                       {
+                                           cube_label_1->setVisible(false);
+                                           cube_label_2->setVisible(false);
+
+                                           move_player(final1 + final2);
+                                       });
+                }
             });
-        }
-    });
 
     cube_roll_timer -> start(100);
 }
-
 
 
 
