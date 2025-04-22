@@ -58,6 +58,16 @@
     <string>Kubik</string>
    </property>
   </widget>
+  <widget class="QWidget" name="kaznaWidget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>419</y>
+     <width>171</width>
+     <height>111</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

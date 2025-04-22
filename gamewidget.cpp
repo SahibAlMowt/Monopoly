@@ -8,6 +8,8 @@
 #include <QRandomGenerator>
 #include <QTimer>
 
+#include <QDebug>
+
 GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(new Ui::Game)
 {
     this->playerCount = playerCount;
@@ -29,59 +31,55 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     showFullScreen();
 
     // Create game board cells data
-    QVector<CellInfo> cells =
-        {
-            // Corner cells (indexed differently for clarity)
-            { "GO", 0, "../../pagani_zonda.jpg" },      // Start (index 40)
-            { "JAIL", 0, "../../pagani_zonda.jpg" },    // Jail (index 41)
-            { "FREE PARKING", 0, "../../pagani_zonda.jpg" }, // Parking (index 42)
-            { "GO TO JAIL", 0, "../../pagani_zonda.jpg" },   // Go to Jail (index 43)
+    cells =
+    {
+        // Corner cells (indexed differently for clarity)
+        { "GO", 0, "../../pagani_zonda.jpg", Corner },      // Start (index 40)
+        { "AKADEM", 0, "../../pagani_zonda.jpg", Corner },    // Jail (index 41)
+        { "FREE PARKING", 0, "../../pagani_zonda.jpg", Corner }, // Parking (index 42)
+        { "GO TO AKADEM", 0, "../../pagani_zonda.jpg", Corner },   // Go to Jail (index 43)
 
-            // Regular cells (0-39)
-            { "1", 400, "../../pagani_zonda.jpg" },
-            { "2", 400, "../../pagani_zonda.jpg" },
-            { "3", 400, "../../pagani_zonda.jpg" },
-            { "4", 400, "../../pagani_zonda.jpg" },
-            { "5", 400, "../../pagani_zonda.jpg" },
-            { "6", 400, "../../pagani_zonda.jpg" },
-            { "7", 400, "../../pagani_zonda.jpg" },
-            { "8", 400, "../../pagani_zonda.jpg" },
-            { "9", 400, "../../pagani_zonda.jpg" },
-            { "10", 400, "../../pagani_zonda.jpg" },
-            { "11", 400, "../../pagani_zonda.jpg" },
-            { "12", 400, "../../pagani_zonda.jpg" },
-            { "13", 400, "../../pagani_zonda.jpg" },
-            { "14", 400, "../../pagani_zonda.jpg" },
-            { "15", 400, "../../pagani_zonda.jpg" },
-            { "16", 400, "../../pagani_zonda.jpg" },
-            { "17", 400, "../../pagani_zonda.jpg" },
-            { "18", 400, "../../pagani_zonda.jpg" },
-            { "19", 400, "../../pagani_zonda.jpg" },
-            { "20", 400, "../../pagani_zonda.jpg" },
-            { "21", 400, "../../pagani_zonda.jpg" },
-            { "22", 400, "../../pagani_zonda.jpg" },
-            { "23", 400, "../../pagani_zonda.jpg" },
-            { "24", 400, "../../pagani_zonda.jpg" },
-            { "25", 400, "../../pagani_zonda.jpg" },
-            { "26", 400, "../../pagani_zonda.jpg" },
-            { "27", 400, "../../pagani_zonda.jpg" },
-            { "28", 400, "../../pagani_zonda.jpg" },
-            { "29", 400, "../../pagani_zonda.jpg" },
-            { "30", 400, "../../pagani_zonda.jpg" },
-            { "31", 400, "../../pagani_zonda.jpg" },
-            { "32", 400, "../../pagani_zonda.jpg" },
-            { "33", 400, "../../pagani_zonda.jpg" },
-            { "34", 400, "../../pagani_zonda.jpg" },
-            { "35", 400, "../../pagani_zonda.jpg" },
-            { "36", 400, "../../pagani_zonda.jpg" },
-            { "37", 400, "../../pagani_zonda.jpg" },
-            { "38", 400, "../../pagani_zonda.jpg" },
-            { "39", 400, "../../pagani_zonda.jpg" },
-            { "40", 400, "../../pagani_zonda.jpg" }
-        };
+        // Regular cells (0-39)
+        { "Казна", 0, "../../resources/treasury.png", Treasury },
+        { "Кюрдямир", 60, "", Property },
+        { "Шамахы", 80, "", Property },
+        { "Шанс", 0, "../../resources/chance.png", Chance },
+        { "Вокзал", 200, "../../resources/train.png", Railroad },
+        { "Казна", 0, "../../resources/treasury.png", Treasury },
+        { "Кяльбаджар", 100, "", Property },
+        { "Лачин", 100, "", Property },
+        { "Шуша", 120, "", Property },
+        { "Загатала", 140, "", Property },
+        { "Габала", 160, "", Property },
+        { "Шеки", 180, "", Property },
+        { "Казна", 0, "../../resources/treasury.png", Treasury },
+        { "Вокзал", 200, "../../resources/train.png", Railroad },
+        { "Шанс", 0, "../../resources/chance.png", Chance },
+        { "Астара", 200, "", Property },
+        { "Лерик", 200, "", Property },
+        { "Ленкорань", 220, "", Property },
+        { "Джульфа", 220, "", Property },
+        { "Ордубад", 220, "", Property },
+        { "Нахычеван", 240, "", Property },
+        { "Шанс", 0, "../../resources/chance.png", Chance },
+        { "Вокзал", 200, "../../resources/train.png", Railroad },
+        { "Казна", 0, "../../resources/treasury.png", Treasury },
+        { "Гусар", 280, "", Property },
+        { "Хачмаз", 280, "", Property },
+        { "Губа", 300, "", Property },
+        { "Мингячевир", 300, "", Property },
+        { "Гёй-Гёль", 300, "", Property },
+        { "Гянджа", 320, "", Property },
+        { "Казна", 0, "../../resources/treasury.png", Treasury },
+        { "Вокзал", 200, "../../resources/train.png", Railroad },
+        { "Шанс", 0, "../../resources/chance.png", Chance },
+        { "Сумгайыт", 360, "", Property },
+        { "Баку", 400, "", Property },
+        { "Сверхналог", 100, "../../resources/dollar.png", Tax }
+    };
 
     // Create main layout - stretched to fill the entire screen
-    QGridLayout *mainLayout = new QGridLayout(this);
+    mainLayout = new QGridLayout(this);
     mainLayout->setSpacing(0);
     mainLayout->setContentsMargins(0, 0, 0, 0); // Remove all margins to maximize space
 
@@ -197,6 +195,8 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         path.append({i, 10});
     }
 
+    treasury_dialog = new TreasuryDialog(this);
+
     // Создаем игроков в зависимости от выбранного количества
     Player::PlayerColor colors[] = {
         Player::Red,
@@ -278,10 +278,10 @@ void GameWindow::move_player(int steps)
     // Перемещаем текущего игрока
     playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
     auto [row, col] = path[playerPositions[currentPlayerIndex]];
-    players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+    players[currentPlayerIndex] -> moveTo(boardLayout, row, col);
 
     // Переходим к следующему игроку
-    QTimer::singleShot(1000, this, &GameWindow::next_player);
+    check_cell_type();
 }
 
 void GameWindow::next_player()
@@ -294,7 +294,7 @@ void GameWindow::next_player()
 }
 
 QStringList cube_images =
-    {
+{
         "../../resources/cube_1.png",
         "../../resources/cube_2.png",
         "../../resources/cube_3.png",
@@ -360,3 +360,139 @@ void GameWindow::start_cubes_roll()
 
     cube_roll_timer->start(100);
 }
+
+
+
+TreasuryDialog::TreasuryDialog(QWidget *parent) : QDialog(parent)
+{
+    setWindowTitle("Казна");
+    setModal(true);
+    setMinimumSize(400, 500);
+
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    cardTextLabel = new QLabel(this);
+    cardTextLabel->setAlignment(Qt::AlignCenter);
+    cardTextLabel->setWordWrap(true);
+    cardTextLabel->setStyleSheet("font-size: 14pt;");
+
+    okButton = new QPushButton("ОК", this);
+    connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
+
+    layout->addWidget(cardTextLabel);
+    layout->addWidget(okButton, 0, Qt::AlignCenter);
+
+    setLayout(layout);
+
+    treasury_cards =
+    {
+        {"Банковская ошибка в вашу пользу. Получите 200$"},
+        {"Оплатите счет за лечение - 50$"},
+        {"Вы выиграли в лотерею. Получите 100$"},
+        {"С днем рождения! Получите 50$ от каждого игрока"},
+        {"Налог на имущество. Заплатите 25$ за каждый дом"}
+    };
+}
+
+
+void TreasuryDialog::show_random_card()
+{
+    int cardIndex = QRandomGenerator::global()->bounded(treasury_cards.size());
+    auto text = treasury_cards[cardIndex];
+
+    cardTextLabel->setText(text);
+}
+
+void GameWindow::check_cell_type()
+{
+    int currentPosition = playerPositions[currentPlayerIndex];
+
+    CellInfo info = cells[currentPosition];
+    CellTypeO cellType = info.type;
+
+    qDebug() << "type:" << static_cast<int>(cellType);
+    qDebug() << "cell name:" << info.name;
+
+
+    switch (cellType)
+    {
+        case Treasury:
+            qDebug() << "cell_treasure";
+            show_treasure_card_in_tab();
+            return;
+        case Chance:
+            // showChanceWindow(); // Будущая функциональность
+            QTimer::singleShot(1000, this, &GameWindow::next_player);
+            return;
+        case Property:
+            // Будущая функциональность для покупки собственности
+            QTimer::singleShot(1000, this, &GameWindow::next_player);
+            return;
+        case Railroad:
+            // Обработка вокзалов
+            QTimer::singleShot(1000, this, &GameWindow::next_player);
+            return;
+        case Tax:
+            // Обработка налогов
+            QTimer::singleShot(1000, this, &GameWindow::next_player);
+            return;
+        case Corner:
+            // Обработка угловых ячеек
+            QTimer::singleShot(1000, this, &GameWindow::next_player);
+            return;
+    }
+
+    qDebug() << "cell";
+
+    QTimer::singleShot(1000, this, &GameWindow::next_player);
+}
+
+
+void GameWindow::show_treasure_dialog()
+{
+    treasury_dialog->show_random_card();
+
+    qDebug() << "treasure";
+
+    QTimer::singleShot(2000, this, [this]()
+    {
+        treasury_dialog->show();
+        next_player();
+    });
+}
+
+void GameWindow::show_treasure_card_in_tab()
+{
+    if (!kaznaWidget) {
+        kaznaWidget = new QWidget(this);
+        kaznaWidget->setStyleSheet("background-color: #fff0b3; border: 2px solid #aa8800;");
+        kaznaWidget->setFixedSize(400, 150);
+
+        QVBoxLayout *kaznaLayout = new QVBoxLayout(kaznaWidget);
+        kaznaLabel = new QLabel("Карта казны появится здесь");
+        kaznaLayout->addWidget(kaznaLabel);
+
+        QPushButton *closeBtn = new QPushButton("Закрыть");
+        kaznaLayout->addWidget(closeBtn);
+        connect(closeBtn, &QPushButton::clicked, kaznaWidget, &QWidget::hide);
+
+        kaznaLayout->setContentsMargins(10, 10, 10, 10);
+
+        mainLayout->addWidget(kaznaWidget, 1, 0, 1, 1, Qt::AlignCenter);
+
+    }
+
+    // Случайная карта
+    QStringList treasury_cards = {
+        "Получите 200 монет!",
+        "Заплатите 100 монет налогов.",
+        "Пропустите ход.",
+        "Карта 'Выход из тюрьмы'",
+        "Отдайте 50 монет каждому игроку."
+    };
+
+    int index = QRandomGenerator::global()->bounded(treasury_cards.size());
+    kaznaLabel->setText(treasury_cards[index]);
+    kaznaWidget->show();
+}
+

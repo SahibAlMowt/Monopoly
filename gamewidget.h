@@ -7,11 +7,28 @@
 #include <QLabel>
 
 #include "player.h"
+#include "cell.h"
 
 namespace Ui
 {
     class Game;
 }
+
+class TreasuryDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+
+    explicit TreasuryDialog(QWidget *parent = nullptr);
+    void show_random_card();
+
+private:
+
+    QLabel *cardTextLabel;
+    QPushButton *okButton;
+    QVector<QString> treasury_cards;
+};
 
 class GameWindow : public QDialog
 {
@@ -54,7 +71,23 @@ private:
     QLabel *cube_label_2;
 
     QGridLayout *boardLayout;
+
+    void check_cell_type();
+    TreasuryDialog *treasury_dialog;
+    void show_treasure_dialog();
+
+    QWidget *kaznaWidget = nullptr;
+    QLabel *kaznaLabel = nullptr;
+
+    void show_treasure_card_in_tab();
+
+    QGridLayout *mainLayout;
+
+    QVector<CellInfo> cells;
 };
+
+
+
 
 
 #endif // GAMEWIDGET_H
