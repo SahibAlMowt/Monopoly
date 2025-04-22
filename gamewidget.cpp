@@ -5,14 +5,12 @@
 #include <QScreen>
 #include <QGridLayout>
 #include <QPushButton>
-
-//#include <QDebug>  <--- important thing
-
 #include <QRandomGenerator>
 #include <QTimer>
 
 GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(new Ui::Game)
 {
+    this->playerCount = playerCount;
     ui->setupUi(this);
 
     // Get screen dimensions for responsive sizing
@@ -152,6 +150,12 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     gameTitle->setStyleSheet("font-size: 24pt; font-weight: bold; color: #990000;");
     centralLayout->addWidget(gameTitle);
 
+    // Add label to show which player's turn it is
+    playerTurnLabel = new QLabel("Ход игрока 1");
+    playerTurnLabel->setAlignment(Qt::AlignCenter);
+    playerTurnLabel->setStyleSheet("font-size: 18pt; font-weight: bold; color: #990000;");
+    centralLayout->addWidget(playerTurnLabel);
+
     // Add central area to the board
     boardLayout->addWidget(centralArea, 1, 1, 9, 9);
 
@@ -170,8 +174,7 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     // Set the layout - no additional buttons since they're in the UI file
     setLayout(mainLayout);
 
-    // sudo rm rf /
-
+    // Создаем маршрут движения
     for(int i = 0; i <= 10; i++)
     {
         path.append({10, 10 - i});
@@ -194,33 +197,70 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         path.append({i, 10});
     }
 
-    player1 = new Player(boardContainer);
+    // Создаем игроков в зависимости от выбранного количества
+    Player::PlayerColor colors[] = {
+        Player::Red,
+        Player::Blue,
+        Player::Green,
+        Player::Yellow
+    };
 
-    auto [row, col] = path[player_index];
-    QLayoutItem *item = boardLayout -> itemAtPosition(row, col);
+    // Инициализируем позиции всех игроков и создаем фишки
+    for (int i = 0; i < playerCount; i++) {
+        players.append(new Player(colors[i], boardContainer));
+        playerPositions.append(0); // Все начинают с позиции 0
 
-    if (item && item -> widget())
-    {
-        QWidget *cell = item -> widget();
-        player1 -> setParent(cell);
-        player1 -> move(5, 5);
-        player1 -> show();
+        // Устанавливаем начальную позицию
+        auto [row, col] = path[0];
+        QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+
+        if (item && item->widget()) {
+            QWidget *cell = item->widget();
+            players[i]->setParent(cell);
+            // Размещаем фишки так, чтобы они не перекрывались
+            players[i]->move(5 + i*5, 5 + i*5);
+            players[i]->show();
+        }
     }
 
-    connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
+    // Настраиваем интерфейс и события
+    connect(ui->go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
+    connect(ui->cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
 
     cube_label_1 = new QLabel(this);
     cube_label_2 = new QLabel(this);
 
-    cube_label_1 -> setScaledContents(true);
-    cube_label_2 -> setScaledContents(true);
+    cube_label_1->setScaledContents(true);
+    cube_label_2->setScaledContents(true);
 
-    cube_label_1 -> setVisible(false);
-    cube_label_2 ->setVisible(false);
+    cube_label_1->setVisible(false);
+    cube_label_2->setVisible(false);
 
-    connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
+    // Обновляем текст, чтобы показать, чей сейчас ход
+    updatePlayerTurnLabel();
 }
 
+// Добавляем новую функцию для обновления текста о текущем игроке
+void GameWindow::updatePlayerTurnLabel() {
+    // Определяем цвет текущего игрока
+    QString colorName;
+    switch (players[currentPlayerIndex]->getColor()) {
+    case Player::Red:
+        colorName = "красного";
+        break;
+    case Player::Blue:
+        colorName = "синего";
+        break;
+    case Player::Green:
+        colorName = "зеленого";
+        break;
+    case Player::Yellow:
+        colorName = "желтого";
+        break;
+    }
+
+    playerTurnLabel->setText(QString("Ход %1 игрока").arg(colorName));
+}
 
 GameWindow::~GameWindow()
 {
@@ -230,14 +270,27 @@ GameWindow::~GameWindow()
 void GameWindow::on_quit_button_clicked()
 {
     emit return_to_menu();
-    this -> hide();
+    this->hide();
 }
 
 void GameWindow::move_player(int steps)
 {
-    player_index = (player_index + steps) % path.size();
-    auto [row, col] = path[player_index];
-    player1 -> moveTo(boardLayout, row, col);
+    // Перемещаем текущего игрока
+    playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+    auto [row, col] = path[playerPositions[currentPlayerIndex]];
+    players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+    // Переходим к следующему игроку
+    QTimer::singleShot(1000, this, &GameWindow::next_player);
+}
+
+void GameWindow::next_player()
+{
+    // Переключаемся на следующего игрока
+    currentPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+
+    // Обновляем текст, показывающий чей сейчас ход
+    updatePlayerTurnLabel();
 }
 
 QStringList cube_images =
@@ -260,13 +313,13 @@ void GameWindow::start_cubes_roll()
     int x = (width() - totalWidth) / 2;
     int y = (height() - cube_size.height()) / 2;
 
-    cube_label_1 -> setGeometry(x, y, cube_size.width(), cube_size.height());
-    cube_label_2 -> setGeometry(x + cube_size.width() + spacing, y, cube_size.width(), cube_size.height());
+    cube_label_1->setGeometry(x, y, cube_size.width(), cube_size.height());
+    cube_label_2->setGeometry(x + cube_size.width() + spacing, y, cube_size.width(), cube_size.height());
 
-    cube_label_1 -> setVisible(true);
-    cube_label_2 -> setVisible(true);
-    cube_label_1 -> raise(); // <--- also important thing
-    cube_label_2 -> raise();
+    cube_label_1->setVisible(true);
+    cube_label_2->setVisible(true);
+    cube_label_1->raise();
+    cube_label_2->raise();
 
     int roll_animation_step = 0;
     int max_roll_steps = 10;
@@ -276,8 +329,8 @@ void GameWindow::start_cubes_roll()
             {
                 if (roll_animation_step < max_roll_steps)
                 {
-                    int random1 = QRandomGenerator::global() -> bounded(1, 7);
-                    int random2 = QRandomGenerator::global() -> bounded(1, 7);
+                    int random1 = QRandomGenerator::global()->bounded(1, 7);
+                    int random2 = QRandomGenerator::global()->bounded(1, 7);
 
                     cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
                     cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
@@ -286,14 +339,14 @@ void GameWindow::start_cubes_roll()
                 }
                 else
                 {
-                    cube_roll_timer -> stop();
-                    cube_roll_timer -> deleteLater();
+                    cube_roll_timer->stop();
+                    cube_roll_timer->deleteLater();
 
                     int final1 = QRandomGenerator::global()->bounded(1, 7);
                     int final2 = QRandomGenerator::global()->bounded(1, 7);
 
-                    cube_label_1 -> setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                    cube_label_2 -> setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cube_label_1->setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cube_label_2->setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
                     QTimer::singleShot(2200, this, [=]()
                                        {
@@ -305,9 +358,5 @@ void GameWindow::start_cubes_roll()
                 }
             });
 
-    cube_roll_timer -> start(100);
+    cube_roll_timer->start(100);
 }
-
-
-
-

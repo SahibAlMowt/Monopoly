@@ -2,10 +2,27 @@
 
 #include <QGridLayout>
 
-Player::Player(QWidget *parent) : QLabel(parent)
+Player::Player(PlayerColor color, QWidget *parent) : QLabel(parent), playerColor(color)
 {
     setFixedSize(20, 20);
-    setStyleSheet("background-color: red; border-radius: 10px;");
+    
+    QString colorStyle;
+    switch (color) {
+        case Red:
+            colorStyle = "red";
+            break;
+        case Blue:
+            colorStyle = "blue";
+            break;
+        case Green:
+            colorStyle = "green";
+            break;
+        case Yellow:
+            colorStyle = "yellow";
+            break;
+    }
+    
+    setStyleSheet("background-color: " + colorStyle + "; border-radius: 10px;");
 }
 
 void Player::moveTo(QLayout *layout, int row, int col)
@@ -23,7 +40,9 @@ void Player::moveTo(QLayout *layout, int row, int col)
     {
         QWidget *cell = item -> widget();
         this -> setParent(cell);
-        this -> move(5, 5);
+        // Немного сдвигаем каждого игрока, чтобы они не перекрывались
+        int offset = static_cast<int>(playerColor) * 5;
+        this -> move(5 + offset, 5 + offset);
         this -> show();
     }
 }

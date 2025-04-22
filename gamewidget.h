@@ -3,12 +3,14 @@
 
 #include <QDialog>
 #include <QHBoxLayout>
+#include <QVector>
+#include <QLabel>
 
 #include "player.h"
 
 namespace Ui
 {
-    class Game;
+class Game;
 }
 
 class GameWindow : public QDialog
@@ -28,8 +30,9 @@ private slots:
 
     void on_quit_button_clicked();
     void move_player(int steps);
-
     void start_cubes_roll();
+    void next_player();
+    void updatePlayerTurnLabel();
 
 private:
 
@@ -38,9 +41,14 @@ private:
     QWidget *central;
     QHBoxLayout *bottomRowLayout;
 
-    Player *player1;
+    QVector<Player*> players;
+    QVector<int> playerPositions;
+    int currentPlayerIndex = 0;
+    int playerCount;
+
+    QLabel *playerTurnLabel;
+
     QVector<QPair<int, int>> path;
-    int player_index = 0;
 
     QLabel *cube_label_1;
     QLabel *cube_label_2;
@@ -51,12 +59,6 @@ private:
     int currentDiceValue = 1;
 
     QGridLayout *boardLayout;
-
-    QVector<Player*> players;
-    int currentPlayerIndex = 0;
-
-
-
 };
 
 
