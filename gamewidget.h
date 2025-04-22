@@ -10,7 +10,7 @@
 
 namespace Ui
 {
-class Game;
+    class Game;
 }
 
 class GameWindow : public QDialog
@@ -52,11 +52,6 @@ private:
 
     QLabel *cube_label_1;
     QLabel *cube_label_2;
-
-    QTimer *diceTimer;
-    int animationStep = 0;
-    int maxSteps = 6;
-    int currentDiceValue = 1;
 
     QGridLayout *boardLayout;
 };

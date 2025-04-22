@@ -270,7 +270,7 @@ GameWindow::~GameWindow()
 void GameWindow::on_quit_button_clicked()
 {
     emit return_to_menu();
-    this->hide();
+    this -> hide();
 }
 
 void GameWindow::move_player(int steps)
@@ -329,8 +329,8 @@ void GameWindow::start_cubes_roll()
             {
                 if (roll_animation_step < max_roll_steps)
                 {
-                    int random1 = QRandomGenerator::global()->bounded(1, 7);
-                    int random2 = QRandomGenerator::global()->bounded(1, 7);
+                    int random1 = QRandomGenerator::global() -> bounded(1, 7);
+                    int random2 = QRandomGenerator::global() -> bounded(1, 7);
 
                     cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
                     cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
@@ -342,19 +342,19 @@ void GameWindow::start_cubes_roll()
                     cube_roll_timer->stop();
                     cube_roll_timer->deleteLater();
 
-                    int final1 = QRandomGenerator::global()->bounded(1, 7);
-                    int final2 = QRandomGenerator::global()->bounded(1, 7);
+                    int final1 = QRandomGenerator::global() -> bounded(1, 7);
+                    int final2 = QRandomGenerator::global() -> bounded(1, 7);
 
                     cube_label_1->setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
                     cube_label_2->setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
                     QTimer::singleShot(2200, this, [=]()
-                                       {
-                                           cube_label_1->setVisible(false);
-                                           cube_label_2->setVisible(false);
+                           {
+                               cube_label_1 ->setVisible(false);
+                               cube_label_2->setVisible(false);
 
-                                           move_player(final1 + final2);
-                                       });
+                               move_player(final1 + final2);
+                            });
                 }
             });
 
