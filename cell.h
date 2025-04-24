@@ -20,7 +20,15 @@ struct CellInfo
     int price;
     QString imagePath;
     CellTypeO type;
+    int owner;
+    bool isMortgaged;
+    int cardIndex;
+    QString colorGroup;
+    int rent;
+    int housePrice;
+    int houseCount;
 };
+
 
 enum class CellType
 {
@@ -29,7 +37,13 @@ enum class CellType
     Vertical
 };
 
-
+enum CardType {
+    Money,          // Изменение денежного баланса
+    Movement,       // Перемещение игрока
+    JailRelated,    // Связано с тюрьмой (попадание или освобождение)
+    PropertyRelated, // Действие, связанное с собственностью
+    SkipTurn        // Пропуск хода
+};
 
 
 class CellWidget : public QFrame
