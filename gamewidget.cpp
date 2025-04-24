@@ -41,6 +41,43 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     // Make sure we're showing fullscreen
     showFullScreen();
 
+
+    ui->go_button->setParent(this);
+    ui->cube_roll->setParent(this);
+    ui->quit_button->setParent(this);
+
+    int rightMargin = 20;
+    int bottomMargin = 20;
+    int buttonSpacing = 10;
+    int buttonWidth = 100;
+    int buttonHeight = 40;
+
+    ui->go_button->setGeometry
+        (
+        screenGeometry.width() - rightMargin - buttonWidth,
+        screenGeometry.height() - bottomMargin - buttonHeight * 3 - buttonSpacing * 2,
+        buttonWidth, buttonHeight
+        );
+
+
+    ui->cube_roll->setGeometry
+        (
+        screenGeometry.width() - rightMargin - buttonWidth,
+        screenGeometry.height() - bottomMargin - buttonHeight * 2 - buttonSpacing,
+        buttonWidth, buttonHeight
+        );
+
+    ui->quit_button->setGeometry(
+        screenGeometry.width() - rightMargin - buttonWidth,
+        screenGeometry.height() - bottomMargin - buttonHeight,
+        buttonWidth, buttonHeight
+        );
+
+
+    ui -> go_button -> raise();
+    ui -> cube_roll -> raise();
+    ui->quit_button->raise();
+
     // Create main layout - stretched to fill the entire screen
     mainLayout = new QGridLayout(this);
     mainLayout->setSpacing(0);
@@ -186,9 +223,11 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         }
     }
 
+
+
     // Настраиваем интерфейс и события
-    connect(ui->go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
-    connect(ui->cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
+    connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
+    connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
 
     cube_label_1 = new QLabel(this);
     cube_label_2 = new QLabel(this);
@@ -213,9 +252,9 @@ void GameWindow::initializeCells() {
 
     // Угловые ячейки
     cells.append({"GO", 0, "../../pagani_zonda.jpg", Corner, -1, false, -1, "", 0, 0, 0});  // Start
-    cells.append({"AKADEM", 0, "../../pagani_zonda.jpg", Corner, -1, false, -1, "", 0, 0, 0});  // Jail
-    cells.append({"FREE PARKING", 0, "../../pagani_zonda.jpg", Corner, -1, false, -1, "", 0, 0, 0});  // Free Parking
-    cells.append({"GO TO AKADEM", 0, "../../pagani_zonda.jpg", Corner, -1, false, -1, "", 0, 0, 0});  // Go to Jail
+    cells.append({"AKADEM", 0, "../../resources/academ.png", Corner, -1, false, -1, "", 0, 0, 0});  // Jail
+    cells.append({"FREE PARKING", 0, "../../resources/parking.png", Corner, -1, false, -1, "", 0, 0, 0});  // Free Parking
+    cells.append({"GO TO AKADEM", 0, "../../resources/go_to_academ.png", Corner, -1, false, -1, "", 0, 0, 0});  // Go to Jail
 
     // Обычные ячейки
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
@@ -554,9 +593,11 @@ void GameWindow::start_cubes_roll()
     QSize cube_size(100, 100);
     int spacing = 20;
 
-    int totalWidth = cube_size.width() * 2 + spacing;
-    int x = (width() - totalWidth) / 2;
+  //  int totalWidth = cube_size.width() * 2 + spacing;
+  //  int x = (width() - totalWidth) / 2;
     int y = (height() - cube_size.height()) / 2;
+
+    int x  = 430;
 
     cube_label_1->setGeometry(x, y, cube_size.width(), cube_size.height());
     cube_label_2->setGeometry(x + cube_size.width() + spacing, y, cube_size.width(), cube_size.height());

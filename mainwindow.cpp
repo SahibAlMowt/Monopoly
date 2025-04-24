@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     ui -> slide_audio -> setValue(50);
     connect(ui -> slide_audio, &QSlider::valueChanged, this, &MainWindow::set_volume_audio);
 
-    player -> setMedia(QUrl::fromLocalFile("../../mortals.mp3"));
+    player -> setMedia(QUrl::fromLocalFile("../../resources/music.mp3"));
     player -> setVolume(50);
 
     connect(ui -> start_game_button, &QPushButton::clicked, this, &MainWindow::start_game_button);
@@ -34,20 +34,6 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-// void MainWindow::start_game_button()
-// {
-//     if (!gameWindow)
-//     {
-//         gameWindow = new GameWindow(this);
-
-//         connect(gameWindow, &GameWindow::return_to_menu, this, &MainWindow::show);
-//     }
-
-//     gameWindow -> showFullScreen();
-
-//     this -> hide();
-// }
 
 void MainWindow::start_game_button()
 {
@@ -61,8 +47,6 @@ void MainWindow::start_game_button()
 
         connect(gameWindow, &GameWindow::return_to_menu, this, &MainWindow::show);
     }
-
-    //-------------
 
     gameWindow -> show();
 
