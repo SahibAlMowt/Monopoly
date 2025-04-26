@@ -129,6 +129,8 @@ private:
     void check_cell_type();
     void show_treasure_dialog();
     void show_treasure_card_in_tab();
+
+    QVector<CellWidget*> cell_vec;
 };
 
 #endif // GAMEWIDGET_H

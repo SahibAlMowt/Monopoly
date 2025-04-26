@@ -1,7 +1,8 @@
 #include "cell.h"
 #include <QVBoxLayout>
+#include <QDebug>
 
-CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent)
+CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent), cell_info(info)
 {
     setFrameShape(QFrame::Box);
     setLineWidth(2);
@@ -24,4 +25,35 @@ CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent)
         priceLabel -> setAlignment(Qt::AlignCenter);
         layout -> addWidget(priceLabel);
     }
+
+    houseLayout = new QHBoxLayout();
+    houseLayout -> setAlignment(Qt::AlignCenter);
+  //  layout->addStretch();
+    layout -> addLayout(houseLayout);
 }
+
+void CellWidget::build_house()
+{
+    if (cell_info.houseCount >= 4)
+    {
+        return;
+    }
+
+    QLabel *house = new QLabel(this);
+
+    QPixmap housePixmap("../../resources/colour7.png");
+    qDebug() << "Pixmap loaded: " << !housePixmap.isNull();
+
+    house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    house->setFixedSize(15, 15);
+
+    houseLayout->addWidget(house);
+
+    houseLayout->update();
+    this->update();
+    this->updateGeometry();
+
+    cell_info.houseCount++;
+}
+
+

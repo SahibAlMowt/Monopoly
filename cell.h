@@ -3,6 +3,7 @@
 
 #include <QLabel>
 #include <QFrame>
+#include <QHBoxLayout>
 
 enum CellTypeO
 {
@@ -26,7 +27,7 @@ struct CellInfo
     QString colorGroup;
     int rent;
     int housePrice;
-    int houseCount;
+    int houseCount = 0;
 };
 
 
@@ -59,12 +60,16 @@ public:
         return cell_info;
     }
 
+    void build_house();
+
 private:
 
     CellInfo cell_info;
     QLabel *imageLabel;
     QLabel *nameLabel;
     QLabel *priceLabel;
+
+    QHBoxLayout *houseLayout;
 
 };
 

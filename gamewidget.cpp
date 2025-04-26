@@ -11,6 +11,8 @@
 
 #include <QDebug>
 
+#include <QPropertyAnimation>
+
 GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(new Ui::Game)
 {
     this->playerCount = playerCount;
@@ -42,15 +44,24 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     showFullScreen();
 
 
-    ui->go_button->setParent(this);
-    ui->cube_roll->setParent(this);
-    ui->quit_button->setParent(this);
+    ui -> go_button -> setParent(this);
+    ui -> cube_roll -> setParent(this);
+    ui -> quit_button -> setParent(this);
+    ui -> build_houses -> setParent(this);
 
     int rightMargin = 20;
     int bottomMargin = 20;
     int buttonSpacing = 10;
     int buttonWidth = 100;
     int buttonHeight = 40;
+
+    ui -> build_houses -> setGeometry
+        (
+            screenGeometry.width() - rightMargin - buttonWidth,
+            screenGeometry.height() - bottomMargin - buttonHeight * 4 - buttonSpacing * 3,
+            buttonWidth, buttonHeight
+            );
+
 
     ui->go_button->setGeometry
         (
@@ -76,7 +87,8 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
 
     ui -> go_button -> raise();
     ui -> cube_roll -> raise();
-    ui->quit_button->raise();
+    ui -> quit_button ->raise();
+    ui -> build_houses -> raise();
 
     // Create main layout - stretched to fill the entire screen
     mainLayout = new QGridLayout(this);
@@ -134,6 +146,14 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         cell->setFixedSize(baseSize * 1.5, baseSize);
         boardLayout->addWidget(cell, i, 10);
     }
+
+    for(int i = 0; i < cells.size(); i++)
+    {
+        CellWidget *widget = new CellWidget(cells[i]);
+        cell_vec.append(widget);
+        qDebug() << "cell_vec = " << i << "\n";
+    }
+
 
     // 6. Add central area for game logo/info
     QWidget *centralArea = new QWidget();
@@ -228,6 +248,18 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     // Настраиваем интерфейс и события
     connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
     connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
+    connect(ui -> build_houses, &QPushButton::clicked, this,[=]()
+        {
+            if(cell_vec[16])
+            {
+                cell_vec[16] -> build_house();
+                qDebug() << "ok";
+            }
+            else
+            {
+                qDebug() << "nope";
+            }
+        });
 
     cube_label_1 = new QLabel(this);
     cube_label_2 = new QLabel(this);
@@ -592,75 +624,91 @@ void GameWindow::start_cubes_roll()
 {
     QSize cube_size(100, 100);
     int spacing = 20;
-
-  //  int totalWidth = cube_size.width() * 2 + spacing;
-  //  int x = (width() - totalWidth) / 2;
     int y = (height() - cube_size.height()) / 2;
+    int x = 430;
 
-    int x  = 430;
-
-    cube_label_1->setGeometry(x, y, cube_size.width(), cube_size.height());
-    cube_label_2->setGeometry(x + cube_size.width() + spacing, y, cube_size.width(), cube_size.height());
+    cube_label_1->setGeometry(0, 0, cube_size.width(), cube_size.height());
+    cube_label_2->setGeometry(width(), 0, cube_size.width(), cube_size.height());
 
     cube_label_1->setVisible(true);
     cube_label_2->setVisible(true);
     cube_label_1->raise();
     cube_label_2->raise();
 
-    int roll_animation_step = 0;
-    int max_roll_steps = 10;
-    QTimer *cube_roll_timer = new QTimer(this);
+    QPoint center1(x, y);
+    QPoint center2(x + cube_size.width() + spacing, y);
 
-    connect(cube_roll_timer, &QTimer::timeout, this, [=]() mutable
+    QPropertyAnimation *anim1 = new QPropertyAnimation(cube_label_1, "pos");
+    anim1->setDuration(1000);
+    anim1->setStartValue(QPoint(0, 0));
+    anim1->setEndValue(center1);
+    anim1->setEasingCurve(QEasingCurve::OutBounce);
+
+    QPropertyAnimation *anim2 = new QPropertyAnimation(cube_label_2, "pos");
+    anim2->setDuration(1000);
+    anim2->setStartValue(QPoint(width(), 0));
+    anim2->setEndValue(center2);
+    anim2->setEasingCurve(QEasingCurve::OutBounce);
+
+    connect(anim2, &QPropertyAnimation::finished, this, [=]()
             {
-                if (roll_animation_step < max_roll_steps)
-                {
-                    int random1 = QRandomGenerator::global() -> bounded(1, 7);
-                    int random2 = QRandomGenerator::global() -> bounded(1, 7);
+                int roll_animation_step = 0;
+                int max_roll_steps = 10;
+                QTimer *cube_roll_timer = new QTimer(this);
 
-                    cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                    cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                connect(cube_roll_timer, &QTimer::timeout, this, [=]() mutable
+                        {
+                            if (roll_animation_step < max_roll_steps)
+                            {
+                                int random1 = QRandomGenerator::global()->bounded(1, 7);
+                                int random2 = QRandomGenerator::global()->bounded(1, 7);
 
-                    roll_animation_step++;
-                }
-                else
-                {
-                    cube_roll_timer->stop();
-                    cube_roll_timer->deleteLater();
+                                cube_label_1 -> setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                                cube_label_2 -> setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
-                    int final1 = QRandomGenerator::global() -> bounded(1, 7);
-                    int final2 = QRandomGenerator::global() -> bounded(1, 7);
+                                roll_animation_step++;
+                            }
+                            else
+                            {
+                                cube_roll_timer->stop();
+                                cube_roll_timer->deleteLater();
 
-                    cube_label_1->setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                    cube_label_2->setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                                int final1 = QRandomGenerator::global()->bounded(1, 7);
+                                int final2 = QRandomGenerator::global()->bounded(1, 7);
 
-                    // Проверяем, не в тюрьме ли игрок и не выбросил ли он дубль
-                    if (playerStates[currentPlayerIndex].inJail && final1 == final2) {
-                        playerStates[currentPlayerIndex].inJail = false;
-                        QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
-                    }
+                                cube_label_1 -> setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                                cube_label_2 -> setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
-                    QTimer::singleShot(2200, this, [=]()
-                                       {
-                                           cube_label_1 ->setVisible(false);
-                                           cube_label_2->setVisible(false);
+                                if (playerStates[currentPlayerIndex].inJail && final1 == final2)
+                                {
+                                    playerStates[currentPlayerIndex].inJail = false;
+                                    QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
+                                }
 
-                                           move_player(final1 + final2);
+                                QTimer::singleShot(2200, this, [=]()
+                                                   {
+                                                       cube_label_1 -> setVisible(false);
+                                                       cube_label_2 -> setVisible(false);
 
-                                           // Если выпал дубль, игрок ходит еще раз
-                                           if (final1 == final2 && !playerStates[currentPlayerIndex].inJail) {
-                                               QMessageBox::information(this, "Дубль!", "Вы выбросили дубль! Ходите еще раз.");
-                                               // Отменяем переход хода
-                                               // Обратите внимание, что это требует изменения логики, так как move_player вызывает next_player
-                                               // В данном случае мы просто вернемся к текущему игроку после move_player
-                                               currentPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount;
-                                           }
-                                       });
-                }
+                                                       move_player(final1 + final2);
+
+                                                       if (final1 == final2 && !playerStates[currentPlayerIndex].inJail)
+                                                       {
+                                                           QMessageBox::information(this, "Дубль!", "Вы выбросили дубль! Ходите еще раз.");
+                                                           currentPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount;
+                                                       }
+                                                   });
+                            }
+                        });
+
+                cube_roll_timer -> start(100);
             });
 
-    cube_roll_timer->start(100);
+
+    anim1->start(QAbstractAnimation::DeleteWhenStopped);
+    anim2->start(QAbstractAnimation::DeleteWhenStopped);
 }
+
 
 void GameWindow::check_cell_type()
 {
