@@ -624,90 +624,79 @@ void GameWindow::start_cubes_roll()
 {
     QSize cube_size(100, 100);
     int spacing = 20;
-    int y = (height() - cube_size.height()) / 2;
-    int x = 430;
 
-    cube_label_1->setGeometry(0, 0, cube_size.width(), cube_size.height());
-    cube_label_2->setGeometry(width(), 0, cube_size.width(), cube_size.height());
+    QWidget *boardWidget = boardLayout->parentWidget();
+    int boardWidth = boardWidget->width();
+    int boardHeight = boardWidget->height();
+    QPoint boardTopLeft = boardWidget->mapTo(this, QPoint(0, 0));
+
+
+    int totalWidth = cube_size.width() * 2 + spacing;
+    int x = boardTopLeft.x() + (boardWidth - totalWidth) / 2;
+    int y = boardTopLeft.y() + (boardHeight - cube_size.height()) / 2;
+
+    cube_label_1->setParent(this);
+    cube_label_2->setParent(this);
+
+    cube_label_1->setGeometry(x, y, cube_size.width(), cube_size.height());
+    cube_label_2->setGeometry(x + cube_size.width() + spacing, y, cube_size.width(), cube_size.height());
 
     cube_label_1->setVisible(true);
     cube_label_2->setVisible(true);
     cube_label_1->raise();
     cube_label_2->raise();
 
-    QPoint center1(x, y);
-    QPoint center2(x + cube_size.width() + spacing, y);
+    // Потом запускаем анимацию броска как обычно
+    int roll_animation_step = 0;
+    int max_roll_steps = 10;
+    QTimer *cube_roll_timer = new QTimer(this);
 
-    QPropertyAnimation *anim1 = new QPropertyAnimation(cube_label_1, "pos");
-    anim1->setDuration(1000);
-    anim1->setStartValue(QPoint(0, 0));
-    anim1->setEndValue(center1);
-    anim1->setEasingCurve(QEasingCurve::OutBounce);
-
-    QPropertyAnimation *anim2 = new QPropertyAnimation(cube_label_2, "pos");
-    anim2->setDuration(1000);
-    anim2->setStartValue(QPoint(width(), 0));
-    anim2->setEndValue(center2);
-    anim2->setEasingCurve(QEasingCurve::OutBounce);
-
-    connect(anim2, &QPropertyAnimation::finished, this, [=]()
+    connect(cube_roll_timer, &QTimer::timeout, this, [=]() mutable
             {
-                int roll_animation_step = 0;
-                int max_roll_steps = 10;
-                QTimer *cube_roll_timer = new QTimer(this);
+                if (roll_animation_step < max_roll_steps)
+                {
+                    int random1 = QRandomGenerator::global()->bounded(1, 7);
+                    int random2 = QRandomGenerator::global()->bounded(1, 7);
 
-                connect(cube_roll_timer, &QTimer::timeout, this, [=]() mutable
-                        {
-                            if (roll_animation_step < max_roll_steps)
-                            {
-                                int random1 = QRandomGenerator::global()->bounded(1, 7);
-                                int random2 = QRandomGenerator::global()->bounded(1, 7);
+                    cube_label_1->setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cube_label_2->setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
-                                cube_label_1 -> setPixmap(QPixmap(cube_images[random1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                                cube_label_2 -> setPixmap(QPixmap(cube_images[random2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    roll_animation_step++;
+                }
+                else
+                {
+                    cube_roll_timer->stop();
+                    cube_roll_timer->deleteLater();
 
-                                roll_animation_step++;
-                            }
-                            else
-                            {
-                                cube_roll_timer->stop();
-                                cube_roll_timer->deleteLater();
+                    int final1 = QRandomGenerator::global()->bounded(1, 7);
+                    int final2 = QRandomGenerator::global()->bounded(1, 7);
 
-                                int final1 = QRandomGenerator::global()->bounded(1, 7);
-                                int final2 = QRandomGenerator::global()->bounded(1, 7);
+                    cube_label_1->setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    cube_label_2->setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
-                                cube_label_1 -> setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-                                cube_label_2 -> setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                    if (playerStates[currentPlayerIndex].inJail && final1 == final2) {
+                        playerStates[currentPlayerIndex].inJail = false;
+                        QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
+                    }
 
-                                if (playerStates[currentPlayerIndex].inJail && final1 == final2)
-                                {
-                                    playerStates[currentPlayerIndex].inJail = false;
-                                    QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
-                                }
+                    QTimer::singleShot(2200, this, [=]()
+                                       {
+                                           cube_label_1->setVisible(false);
+                                           cube_label_2->setVisible(false);
 
-                                QTimer::singleShot(2200, this, [=]()
-                                                   {
-                                                       cube_label_1 -> setVisible(false);
-                                                       cube_label_2 -> setVisible(false);
+                                           move_player(final1 + final2);
 
-                                                       move_player(final1 + final2);
-
-                                                       if (final1 == final2 && !playerStates[currentPlayerIndex].inJail)
-                                                       {
-                                                           QMessageBox::information(this, "Дубль!", "Вы выбросили дубль! Ходите еще раз.");
-                                                           currentPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount;
-                                                       }
-                                                   });
-                            }
-                        });
-
-                cube_roll_timer -> start(100);
+                                           if (final1 == final2 && !playerStates[currentPlayerIndex].inJail) {
+                                               QMessageBox::information(this, "Дубль!", "Вы выбросили дубль! Ходите еще раз.");
+                                               currentPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount;
+                                           }
+                                       });
+                }
             });
 
-
-    anim1->start(QAbstractAnimation::DeleteWhenStopped);
-    anim2->start(QAbstractAnimation::DeleteWhenStopped);
+    cube_roll_timer->start(100);
 }
+
 
 
 void GameWindow::check_cell_type()
