@@ -84,6 +84,10 @@ private slots:
     void next_player();
     void updatePlayerTurnLabel();
 
+public slots:
+
+    void select_cell(int index);
+
 private:
     Ui::Game *ui;
     QWidget *central;
@@ -131,6 +135,10 @@ private:
     void show_treasure_card_in_tab();
 
     QVector<CellWidget*> cell_vec;
+
+    int selected_cell_index = -1;
+
+
 };
 
 #endif // GAMEWIDGET_H

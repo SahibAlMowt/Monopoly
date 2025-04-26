@@ -42,7 +42,7 @@ void CellWidget::build_house()
     QLabel *house = new QLabel(this);
 
     QPixmap housePixmap("../../resources/colour7.png");
-    qDebug() << "Pixmap loaded: " << !housePixmap.isNull();
+  //  qDebug() << "Pixmap loaded: " << !housePixmap.isNull();
 
     house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     house->setFixedSize(15, 15);
@@ -50,6 +50,7 @@ void CellWidget::build_house()
     houseLayout->addWidget(house);
 
     houseLayout->update();
+
     this->update();
     this->updateGeometry();
 

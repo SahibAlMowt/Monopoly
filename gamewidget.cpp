@@ -147,12 +147,6 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         boardLayout->addWidget(cell, i, 10);
     }
 
-    for(int i = 0; i < cells.size(); i++)
-    {
-        CellWidget *widget = new CellWidget(cells[i]);
-        cell_vec.append(widget);
-        qDebug() << "cell_vec = " << i << "\n";
-    }
 
 
     // 6. Add central area for game logo/info
@@ -243,23 +237,53 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         }
     }
 
+    for (int i = 0; i < path.size(); i++)
+    {
+        auto [row, col] = path[i];
+        QLayoutItem *item = boardLayout -> itemAtPosition(row, col);
+
+        if (item && item->widget())
+        {
+            CellWidget *cell = qobject_cast<CellWidget*>(item -> widget());
+            if (cell)
+            {
+                const int cellIdx = i;
+
+                connect(cell, &CellWidget::clicked, this, [this, cellIdx]()
+                {
+                    select_cell(cellIdx);
+                });
+            }
+        }
+    }
 
 
     // Настраиваем интерфейс и события
     connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
     connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
-    connect(ui -> build_houses, &QPushButton::clicked, this,[=]()
+
+    connect(ui->build_houses, &QPushButton::clicked, this, [this]()
+    {
+        if (selected_cell_index >= 0 && selected_cell_index < path.size())
         {
-            if(cell_vec[16])
+            auto [row, col] = path[selected_cell_index];
+            QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+            if (item && item->widget())
             {
-                cell_vec[16] -> build_house();
-                qDebug() << "ok";
+                CellWidget *cellWidget = qobject_cast<CellWidget*>(item->widget());
+                if (cellWidget)
+                {
+                    cellWidget->build_house();
+                    qDebug() << "Построен дом на клетке" << selected_cell_index;
+                }
             }
-            else
-            {
-                qDebug() << "nope";
-            }
-        });
+        }
+        else
+        {
+            qDebug() << "Сначала выберите клетку для строительства";
+        }
+    });
+
 
     cube_label_1 = new QLabel(this);
     cube_label_2 = new QLabel(this);
@@ -1333,4 +1357,32 @@ TreasuryDialog::TreasuryDialog(QWidget *parent) : QDialog(parent)
             {"С днем рождения! Получите 50$ от каждого игрока"},
             {"Налог на имущество. Заплатите 25$ за каждый дом"}
         };
+}
+
+void GameWindow::select_cell(int index)
+{
+
+    if (selected_cell_index >= 0 && selected_cell_index < path.size())
+    {
+        auto [prevRow, prevCol] = path[selected_cell_index];
+        QLayoutItem *prevItem = boardLayout -> itemAtPosition(prevRow, prevCol);
+
+        if (prevItem && prevItem -> widget())
+        {
+            prevItem->widget() -> setStyleSheet("");
+        }
+    }
+
+    selected_cell_index = index;
+    if (index >= 0 && index < path.size())
+    {
+        auto [row, col] = path[index];
+        QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+
+        if (item && item->widget())
+        {
+            item->widget()->setStyleSheet("border: 3px solid red;");
+    //        qDebug() << "Выбрана клетка" << index << "с координатами" << row << col;
+        }
+    }
 }

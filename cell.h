@@ -71,6 +71,18 @@ private:
 
     QHBoxLayout *houseLayout;
 
+signals:
+
+    void clicked();
+
+protected:
+
+    void mousePressEvent(QMouseEvent *event) override
+    {
+        emit clicked();
+        QFrame::mousePressEvent(event);
+    }
+
 };
 
 #endif // CELLWIDGET_H
