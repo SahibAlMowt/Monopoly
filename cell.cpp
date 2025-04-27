@@ -43,27 +43,50 @@ CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent), c
 
 void CellWidget::build_house()
 {
-    if (cell_info.houseCount >= 4)
+    cell_info.houseCount++;
+    if(cell_info.houseCount >= 6)
     {
         return;
     }
 
-    QLabel *house = new QLabel(this);
+    if(cell_info.houseCount == 5)
+    {
 
-    QPixmap housePixmap("../../resources/colour7.png");
-  //  qDebug() << "Pixmap loaded: " << !housePixmap.isNull();
+        QLayoutItem *child;
+        while((child = houseLayout -> takeAt(0)) != nullptr)
+        {
+            if (child->widget())
+            {
+                child->widget()->deleteLater();
+            }
+            delete child;
+        }
+        QLabel *hotel = new QLabel(this);
 
-    house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    house->setFixedSize(15, 15);
+        QPixmap housePixmap("../../resources/colour5.png");
 
-    houseLayout->addWidget(house);
+        hotel->setPixmap(housePixmap.scaled(20, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        hotel->setFixedSize(20, 15);
+
+        houseLayout->addWidget(hotel);
+    }
+    else if(cell_info.houseCount <= 4)
+    {
+        QLabel *house = new QLabel(this);
+
+        QPixmap housePixmap("../../resources/colour7.png");
+        //  qDebug() << "Pixmap loaded: " << !housePixmap.isNull();
+
+        house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        house->setFixedSize(15, 15);
+
+        houseLayout->addWidget(house);
+    }
 
     houseLayout->update();
 
     this->update();
     this->updateGeometry();
-
-    cell_info.houseCount++;
 }
 
 
