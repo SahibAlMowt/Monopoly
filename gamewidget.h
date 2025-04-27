@@ -115,6 +115,7 @@ private:
     QVector<QLabel*> playerLabels;
 
     // Методы инициализации и игровой логики
+    int GetCellIndex(int);
     void initializeCards();
     void initializeCells();
     void createPlayerInfoWidget();

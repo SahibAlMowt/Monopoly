@@ -311,7 +311,6 @@ void GameWindow::initializeCells() {
     cells.append({"AKADEM", 0, "../../resources/academ.png", Corner, -1, false, -1, "", 0, 0, 0});  // Jail
     cells.append({"FREE PARKING", 0, "../../resources/parking.png", Corner, -1, false, -1, "", 0, 0, 0});  // Free Parking
     cells.append({"GO TO AKADEM", 0, "../../resources/go_to_academ.png", Corner, -1, false, -1, "", 0, 0, 0});  // Go to Jail
-
     // Обычные ячейки
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
     cells.append({"Кюрдямир", 60, "../../resources/colour1.png", Property, -1, false, -1, "brown", 2, 50, 0});
@@ -322,6 +321,9 @@ void GameWindow::initializeCells() {
     cells.append({"Кяльбаджар", 100, "../../resources/colour2.png", Property, -1, false, -1, "lightblue", 6, 50, 0});
     cells.append({"Лачин", 100, "../../resources/colour2.png", Property, -1, false, -1, "lightblue", 6, 50, 0});
     cells.append({"Шуша", 120, "../../resources/colour2.png", Property, -1, false, -1, "lightblue", 8, 50, 0});
+
+
+
     cells.append({"Загатала", 140, "../../resources/colour3.png", Property, -1, false, -1, "pink", 10, 100, 0});
     cells.append({"Габала", 160, "../../resources/colour3.png", Property, -1, false, -1, "pink", 12, 100, 0});
     cells.append({"Шеки", 180, "../../resources/colour3.png", Property, -1, false, -1, "pink", 14, 100, 0});
@@ -331,6 +333,9 @@ void GameWindow::initializeCells() {
     cells.append({"Астара", 200, "../../resources/colour4.png", Property, -1, false, -1, "orange", 16, 100, 0});
     cells.append({"Лерик", 200, "../../resources/colour4.png", Property, -1, false, -1, "orange", 16, 100, 0});
     cells.append({"Ленкорань", 220, "../../resources/colour4.png", Property, -1, false, -1, "orange", 18, 100, 0});
+
+
+
     cells.append({"Джульфа", 220, "../../resources/colour5.png", Property, -1, false, -1, "red", 18, 150, 0});
     cells.append({"Ордубад", 220, "../../resources/colour5.png", Property, -1, false, -1, "red", 20, 150, 0});
     cells.append({"Нахычеван", 240, "../../resources/colour5.png", Property, -1, false, -1, "red", 22, 150, 0});
@@ -340,6 +345,9 @@ void GameWindow::initializeCells() {
     cells.append({"Гусар", 280, "../../resources/colour6.png", Property, -1, false, -1, "yellow", 24, 150, 0});
     cells.append({"Хачмаз", 280, "../../resources/colour6.png", Property, -1, false, -1, "yellow", 24, 150, 0});
     cells.append({"Губа", 300, "../../resources/colour6.png", Property, -1, false, -1, "yellow", 26, 150, 0});
+
+
+
     cells.append({"Мингячевир", 300, "../../resources/colour7.png", Property, -1, false, -1, "green", 26, 200, 0});
     cells.append({"Гёй-Гёль", 300, "../../resources/colour7.png", Property, -1, false, -1, "green", 28, 200, 0});
     cells.append({"Гянджа", 320, "../../resources/colour7.png", Property, -1, false, -1, "green", 30, 200, 0});
@@ -461,7 +469,7 @@ void GameWindow::on_quit_button_clicked()
     this -> hide();
 }
 
-void GameWindow::move_player(int steps)
+/*void GameWindow::move_player(int steps)
 {
     // Проверяем, находится ли игрок в тюрьме
     if (playerStates[currentPlayerIndex].inJail) {
@@ -496,6 +504,43 @@ void GameWindow::move_player(int steps)
     }
 
     // Проверяем типа ячейки и выполняем соответствующие действия
+    check_cell_type();
+}*/
+
+void GameWindow::move_player(int steps)
+{
+    // Проверяем, находится ли игрок в тюрьме
+    if (playerStates[currentPlayerIndex].inJail) {
+        QMessageBox::information(this, "Тюрьма", "Вы в тюрьме! Чтобы выйти, бросьте дубль, используйте карту выхода или заплатите 50₼");
+        // Уменьшаем количество ходов в тюрьме
+        playerStates[currentPlayerIndex].jailTurns--;
+        // Если время в тюрьме истекло, игрок выходит автоматически
+        if (playerStates[currentPlayerIndex].jailTurns <= 0) {
+            playerStates[currentPlayerIndex].inJail = false;
+            QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
+        }
+        // Переходим к следующему игроку
+        next_player();
+        return;
+    }
+
+    // Перемещаем текущего игрока
+    int oldPosition = playerPositions[currentPlayerIndex];
+    playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+    auto [row, col] = path[playerPositions[currentPlayerIndex]];
+    players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+    // Проверяем, пересек ли игрок клетку "Старт"
+    if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
+        // Игрок сделал полный круг, начисляем 200₼
+        playerStates[currentPlayerIndex].money += 200;
+        QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
+        updatePlayerInfoDisplay();
+    }
+
+    qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+
+    // Проверяем тип ячейки и выполняем соответствующие действия
     check_cell_type();
 }
 
@@ -721,14 +766,31 @@ void GameWindow::start_cubes_roll()
     cube_roll_timer->start(100);
 }
 
+int GameWindow::GetCellIndex(int pathIndex)
+{
+    if (pathIndex == 0) return 0;        // GO
+    if (pathIndex == 10) return 1;       // JAIL
+    if (pathIndex == 20) return 2;       // FREE PARKING
+    if (pathIndex == 30) return 3;       // GO TO JAIL
 
+    // Для остальных ячеек:
+    if (pathIndex > 0 && pathIndex < 10) return pathIndex + 3;  // Нижний ряд
+    if (pathIndex > 10 && pathIndex < 20) return (pathIndex - 10) + 12; // Левый столбец
+    if (pathIndex > 20 && pathIndex < 30) return (pathIndex - 20) + 21; // Верхний ряд
+    if (pathIndex > 30 && pathIndex < 40) return (pathIndex - 30) + 30; // Правый столбец
+
+    return 0; // На всякий случай
+}
 
 void GameWindow::check_cell_type()
 {
     int currentPosition = playerPositions[currentPlayerIndex];
-    CellInfo& info = cells[currentPosition];
+    int cellIndex = GetCellIndex(currentPosition);
+    CellInfo& info = cells[cellIndex];
 
     qDebug() << "Игрок на ячейке:" << info.name << "тип:" << static_cast<int>(info.type);
+
+    // Остальная часть функции без изменений
 
     switch (info.type)
     {
@@ -1037,7 +1099,7 @@ void GameWindow::processCard(const Card& card)
 
 void GameWindow::buyProperty(int cellIndex)
 {
-    CellInfo& info = cells[cellIndex];
+    CellInfo& info = cells[GetCellIndex(cellIndex)];
     PlayerState& currentPlayer = playerStates[currentPlayerIndex];
 
     // Проверяем, есть ли у игрока достаточно денег
@@ -1047,7 +1109,7 @@ void GameWindow::buyProperty(int cellIndex)
 
         // Назначаем собственность игроку
         info.owner = currentPlayerIndex;
-        currentPlayer.properties.append(cellIndex);
+        currentPlayer.properties.append(GetCellIndex(cellIndex));
 
         QMessageBox::information(this, "Покупка успешна",
                                  QString("Вы приобрели %1 за %2₼").arg(info.name).arg(info.price));
@@ -1062,7 +1124,7 @@ void GameWindow::buyProperty(int cellIndex)
 
 void GameWindow::payRent(int cellIndex)
 {
-    CellInfo& info = cells[cellIndex];
+    CellInfo& info = cells[GetCellIndex(cellIndex)];
 
     if (info.owner == -1 || info.isMortgaged) {
         // Если нет владельца или собственность заложена, рента не платится
@@ -1095,7 +1157,7 @@ void GameWindow::payRent(int cellIndex)
 
 int GameWindow::calculateRent(int cellIndex)
 {
-    CellInfo& info = cells[cellIndex];
+    CellInfo& info = cells[GetCellIndex(cellIndex)];
 
     if (info.type == Property) {
         // Для обычной собственности
@@ -1154,14 +1216,14 @@ bool GameWindow::playerOwnsAllPropertiesInGroup(int playerId, const QString& col
 
 void GameWindow::mortgageProperty(int cellIndex)
 {
-    CellInfo& info = cells[cellIndex];
+    CellInfo& info = cells[GetCellIndex(cellIndex)];
     PlayerState& currentPlayer = playerStates[currentPlayerIndex];
 
     // Проверяем, принадлежит ли собственность игроку и не заложена ли она уже
     if (info.owner == currentPlayerIndex && !info.isMortgaged) {
         // Закладываем собственность
         info.isMortgaged = true;
-        currentPlayer.mortgagedProperties.append(cellIndex);
+        currentPlayer.mortgagedProperties.append(GetCellIndex(cellIndex));
 
         // Получаем деньги (половина стоимости)
         int mortgageValue = info.price / 2;
@@ -1177,7 +1239,7 @@ void GameWindow::mortgageProperty(int cellIndex)
 
 void GameWindow::unmortgageProperty(int cellIndex)
 {
-    CellInfo& info = cells[cellIndex];
+    CellInfo& info = cells[GetCellIndex(cellIndex)];
     PlayerState& currentPlayer = playerStates[currentPlayerIndex];
 
     // Проверяем, принадлежит ли собственность игроку и заложена ли она
@@ -1192,7 +1254,7 @@ void GameWindow::unmortgageProperty(int cellIndex)
             currentPlayer.money -= unmortgagePrice;
 
             // Удаляем из списка заложенной собственности
-            currentPlayer.mortgagedProperties.removeAll(cellIndex);
+            currentPlayer.mortgagedProperties.removeAll(GetCellIndex(cellIndex));
 
             QMessageBox::information(this, "Выкуп собственности",
                                      QString("Вы выкупили %1 за %2₼").arg(info.name).arg(unmortgagePrice));
@@ -1208,7 +1270,7 @@ void GameWindow::unmortgageProperty(int cellIndex)
 
 void GameWindow::buildHouse(int cellIndex)
 {
-    CellInfo& info = cells[cellIndex];
+    CellInfo& info = cells[GetCellIndex(cellIndex)];
     PlayerState& currentPlayer = playerStates[currentPlayerIndex];
 
     // Проверяем, принадлежит ли собственность игроку, не заложена ли она, и можно ли построить дом
