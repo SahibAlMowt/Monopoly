@@ -307,7 +307,7 @@ void GameWindow::initializeCells() {
     cells.clear();
 
     // Угловые ячейки
-    cells.append({"GO", 0, "../../pagani_zonda.jpg", Corner, -1, false, -1, "", 0, 0, 0});  // Start
+    cells.append({"GO", 0, "../../resources/go.png", Corner, -1, false, -1, "", 0, 0, 0});  // Start
     cells.append({"AKADEM", 0, "../../resources/academ.png", Corner, -1, false, -1, "", 0, 0, 0});  // Jail
     cells.append({"FREE PARKING", 0, "../../resources/parking.png", Corner, -1, false, -1, "", 0, 0, 0});  // Free Parking
     cells.append({"GO TO AKADEM", 0, "../../resources/go_to_academ.png", Corner, -1, false, -1, "", 0, 0, 0});  // Go to Jail
@@ -316,7 +316,7 @@ void GameWindow::initializeCells() {
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
     cells.append({"Кюрдямир", 60, "../../resources/colour1.png", Property, -1, false, -1, "brown", 2, 50, 0});
     cells.append({"Шамахы", 80, "../../resources/colour1.png", Property, -1, false, -1, "brown", 4, 50, 0});
-    cells.append({"Шанс", 0, "../../resources/chance.png", Chance, -1, false, -1, "", 0, 0, 0});
+    cells.append({"Шанс", 0, "../../resources/clever.png", Chance, -1, false, -1, "", 0, 0, 0});
     cells.append({"Вокзал", 200, "../../resources/train.png", Railroad, -1, false, -1, "railroad", 25, 0, 0});
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
     cells.append({"Кяльбаджар", 100, "../../resources/colour2.png", Property, -1, false, -1, "lightblue", 6, 50, 0});
@@ -327,14 +327,14 @@ void GameWindow::initializeCells() {
     cells.append({"Шеки", 180, "../../resources/colour3.png", Property, -1, false, -1, "pink", 14, 100, 0});
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
     cells.append({"Вокзал", 200, "../../resources/train.png", Railroad, -1, false, -1, "railroad", 25, 0, 0});
-    cells.append({"Шанс", 0, "../../resources/chance.png", Chance, -1, false, -1, "", 0, 0, 0});
+    cells.append({"Шанс", 0, "../../resources/clever.png", Chance, -1, false, -1, "", 0, 0, 0});
     cells.append({"Астара", 200, "../../resources/colour4.png", Property, -1, false, -1, "orange", 16, 100, 0});
     cells.append({"Лерик", 200, "../../resources/colour4.png", Property, -1, false, -1, "orange", 16, 100, 0});
     cells.append({"Ленкорань", 220, "../../resources/colour4.png", Property, -1, false, -1, "orange", 18, 100, 0});
     cells.append({"Джульфа", 220, "../../resources/colour5.png", Property, -1, false, -1, "red", 18, 150, 0});
     cells.append({"Ордубад", 220, "../../resources/colour5.png", Property, -1, false, -1, "red", 20, 150, 0});
     cells.append({"Нахычеван", 240, "../../resources/colour5.png", Property, -1, false, -1, "red", 22, 150, 0});
-    cells.append({"Шанс", 0, "../../resources/chance.png", Chance, -1, false, -1, "", 0, 0, 0});
+    cells.append({"Шанс", 0, "../../resources/clever.png", Chance, -1, false, -1, "", 0, 0, 0});
     cells.append({"Вокзал", 200, "../../resources/train.png", Railroad, -1, false, -1, "railroad", 25, 0, 0});
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
     cells.append({"Гусар", 280, "../../resources/colour6.png", Property, -1, false, -1, "yellow", 24, 150, 0});
@@ -345,7 +345,7 @@ void GameWindow::initializeCells() {
     cells.append({"Гянджа", 320, "../../resources/colour7.png", Property, -1, false, -1, "green", 30, 200, 0});
     cells.append({"Казна", 0, "../../resources/treasury.png", Treasury, -1, false, -1, "", 0, 0, 0});
     cells.append({"Вокзал", 200, "../../resources/train.png", Railroad, -1, false, -1, "railroad", 25, 0, 0});
-    cells.append({"Шанс", 0, "../../resources/chance.png", Chance, -1, false, -1, "", 0, 0, 0});
+    cells.append({"Шанс", 0, "../../resources/clever.png", Chance, -1, false, -1, "", 0, 0, 0});
     cells.append({"Сумгайыт", 360, "../../resources/colour8.png", Property, -1, false, -1, "blue", 35, 200, 0});
     cells.append({"Баку", 400, "../../resources/colour8.png", Property, -1, false, -1, "blue", 50, 200, 0});
     cells.append({"Сверхналог", 100, "../../resources/dollar.png", Tax, -1, false, -1, "", 0, 0, 0});

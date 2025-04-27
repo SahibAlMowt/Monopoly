@@ -11,7 +11,16 @@ CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent), c
     layout->setContentsMargins(2, 2, 2, 2);
 
     QLabel *imageLabel = new QLabel();
-    imageLabel -> setPixmap(QPixmap(info.imagePath).scaled(50, 30, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    if(info.type == 5)
+    {
+        imageLabel -> setPixmap(QPixmap(info.imagePath).scaled(90, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+ //       qDebug() << "Hello";
+    }
+    else
+    {
+        imageLabel -> setPixmap(QPixmap(info.imagePath).scaled(50, 30, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+
     imageLabel -> setAlignment(Qt::AlignCenter);
     layout -> addWidget(imageLabel);
 
