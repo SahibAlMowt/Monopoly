@@ -46,6 +46,8 @@ void CellWidget::build_house()
     cell_info.houseCount++;
     if(cell_info.houseCount >= 6)
     {
+        cell_info.houseCount--;
+  //      qDebug() << cell_info.houseCount;
         return;
     }
 
