@@ -14,7 +14,7 @@ CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent), c
     if(info.type == 5)
     {
         imageLabel -> setPixmap(QPixmap(info.imagePath).scaled(90, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
- //       qDebug() << "Hello";
+        //       qDebug() << "Hello";
     }
     else
     {
@@ -37,7 +37,7 @@ CellWidget::CellWidget(const CellInfo &info, QWidget *parent): QFrame(parent), c
 
     houseLayout = new QHBoxLayout();
     houseLayout -> setAlignment(Qt::AlignCenter);
-  //  layout->addStretch();
+    //  layout->addStretch();
     layout -> addLayout(houseLayout);
 }
 
@@ -47,7 +47,7 @@ void CellWidget::build_house()
     if(cell_info.houseCount >= 6)
     {
         cell_info.houseCount--;
-  //      qDebug() << cell_info.houseCount;
+        //      qDebug() << cell_info.houseCount;
         return;
     }
 
@@ -91,4 +91,49 @@ void CellWidget::build_house()
     this->updateGeometry();
 }
 
+void CellWidget::remove_house()
+{
+    if (cell_info.houseCount <= 0) {
+        return; // Нечего удалять
+    }
 
+    cell_info.houseCount--;
+
+    // Очищаем текущий layout с домами
+    QLayoutItem *child;
+    while((child = houseLayout->takeAt(0)) != nullptr) {
+        if (child->widget()) {
+            child->widget()->deleteLater();
+        }
+        delete child;
+    }
+
+    // Перестраиваем отображение домов
+    if (cell_info.houseCount == 0) {
+        // Если домов нет, ничего не отображаем
+    }
+    else if (cell_info.houseCount == 4) {
+        // Если был отель, а стало 4 дома
+        for (int i = 0; i < 4; i++) {
+            QLabel *house = new QLabel(this);
+            QPixmap housePixmap("../../resources/colour7.png");
+            house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            house->setFixedSize(15, 15);
+            houseLayout->addWidget(house);
+        }
+    }
+    else {
+        // Просто отображаем нужное количество домов
+        for (int i = 0; i < cell_info.houseCount; i++) {
+            QLabel *house = new QLabel(this);
+            QPixmap housePixmap("../../resources/colour7.png");
+            house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            house->setFixedSize(15, 15);
+            houseLayout->addWidget(house);
+        }
+    }
+
+    houseLayout->update();
+    this->update();
+    this->updateGeometry();
+}

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QHBoxLayout>
+#include <QGroupBox>
 #include <QVector>
 #include <QLabel>
 
@@ -83,9 +84,9 @@ private slots:
     void start_cubes_roll();
     void next_player();
     void updatePlayerTurnLabel();
+    void on_build_houses_clicked();
 
 public slots:
-
     void select_cell(int index);
 
 private:
@@ -125,6 +126,8 @@ private:
     void mortgageProperty(int cellIndex);
     void unmortgageProperty(int cellIndex);
     void buildHouse(int cellIndex);
+    void sellHouse(int cellIndex);
+    void showHouseManagementDialog(int cellIndex);
     void updatePlayerInfoDisplay();
     bool handleBankruptcy();
     int calculateRent(int cellIndex);
@@ -138,8 +141,6 @@ private:
     QVector<CellWidget*> cell_vec;
 
     int selected_cell_index = -1;
-
-
 };
 
 #endif // GAMEWIDGET_H

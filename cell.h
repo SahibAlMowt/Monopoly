@@ -60,7 +60,19 @@ public:
         return cell_info;
     }
 
+    // Метод для изменения информации о ячейке
+    CellInfo &mutableCellInfo()
+    {
+        return cell_info;
+    }
+
+    // Метод для прямого доступа к layout с домами
+    QHBoxLayout* getHouseLayout() {
+        return houseLayout;
+    }
+
     void build_house();
+    void remove_house();
 
 private:
 

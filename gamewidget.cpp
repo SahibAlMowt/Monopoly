@@ -469,44 +469,6 @@ void GameWindow::on_quit_button_clicked()
     this -> hide();
 }
 
-/*void GameWindow::move_player(int steps)
-{
-    // Проверяем, находится ли игрок в тюрьме
-    if (playerStates[currentPlayerIndex].inJail) {
-        QMessageBox::information(this, "Тюрьма", "Вы в тюрьме! Чтобы выйти, бросьте дубль, используйте карту выхода или заплатите 50₼");
-
-        // Уменьшаем количество ходов в тюрьме
-        playerStates[currentPlayerIndex].jailTurns--;
-
-        // Если время в тюрьме истекло, игрок выходит автоматически
-        if (playerStates[currentPlayerIndex].jailTurns <= 0) {
-            playerStates[currentPlayerIndex].inJail = false;
-            QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
-        }
-
-        // Переходим к следующему игроку
-        next_player();
-        return;
-    }
-
-    // Перемещаем текущего игрока
-    int oldPosition = playerPositions[currentPlayerIndex];
-    playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
-    auto [row, col] = path[playerPositions[currentPlayerIndex]];
-    players[currentPlayerIndex] -> moveTo(boardLayout, row, col);
-
-    // Проверяем, пересек ли игрок клетку "Старт"
-    if (playerPositions[currentPlayerIndex] < oldPosition) {
-        // Игрок сделал полный круг, начисляем 200₼
-        playerStates[currentPlayerIndex].money += 200;
-        QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
-        updatePlayerInfoDisplay();
-    }
-
-    // Проверяем типа ячейки и выполняем соответствующие действия
-    check_cell_type();
-}*/
-
 void GameWindow::move_player(int steps)
 {
     // Проверяем, находится ли игрок в тюрьме
@@ -1157,27 +1119,32 @@ void GameWindow::payRent(int cellIndex)
 
 int GameWindow::calculateRent(int cellIndex)
 {
-    CellInfo& info = cells[GetCellIndex(cellIndex)];
+    int actualCellIndex = GetCellIndex(cellIndex);
+    CellInfo& info = cells[actualCellIndex];
 
     if (info.type == Property) {
         // Для обычной собственности
         int baseRent = info.rent;
 
-        // Проверяем, владеет ли игрок всеми свойствами этого цвета
-        if (playerOwnsAllPropertiesInGroup(info.owner, info.colorGroup)) {
-            baseRent *= 2;
+        // Если есть дома, рента зависит от их количества
+        if (info.houseCount > 0) {
+            switch (info.houseCount) {
+            case 1: return baseRent * 5;     // 1 дом - рента x5
+            case 2: return baseRent * 15;    // 2 дома - рента x15
+            case 3: return baseRent * 45;    // 3 дома - рента x45
+            case 4: return baseRent * 80;    // 4 дома - рента x80
+            case 5: return baseRent * 125;   // Отель - рента x125
+            }
         }
 
-        // Увеличиваем ренту в зависимости от количества домов
-        switch (info.houseCount) {
-        case 0: return baseRent;
-        case 1: return baseRent * 5;
-        case 2: return baseRent * 15;
-        case 3: return baseRent * 45;
-        case 4: return baseRent * 80;
-        case 5: return baseRent * 125; // Отель
+        // Проверяем, владеет ли игрок всеми свойствами этого цвета
+        if (playerOwnsAllPropertiesInGroup(info.owner, info.colorGroup)) {
+            return baseRent * 2; // Двойная рента при монополии
         }
-    } else if (info.type == Railroad) {
+
+        return baseRent; // Базовая рента, если нет ни домов, ни монополии
+    }
+    else if (info.type == Railroad) {
         // Для вокзалов
         int railroadCount = 0;
 
@@ -1264,58 +1231,6 @@ void GameWindow::unmortgageProperty(int cellIndex)
         } else {
             QMessageBox::warning(this, "Недостаточно средств",
                                  QString("У вас недостаточно денег для выкупа %1").arg(info.name));
-        }
-    }
-}
-
-void GameWindow::buildHouse(int cellIndex)
-{
-    CellInfo& info = cells[GetCellIndex(cellIndex)];
-    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
-
-    // Проверяем, принадлежит ли собственность игроку, не заложена ли она, и можно ли построить дом
-    if (info.owner == currentPlayerIndex && !info.isMortgaged && info.type == Property) {
-        // Проверяем, владеет ли игрок всеми свойствами этой группы (монополия)
-        if (playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup)) {
-            // Проверяем, не достигнуто ли максимальное количество домов
-            if (info.houseCount < 5) {
-                // Проверяем, есть ли у игрока достаточно денег
-                if (currentPlayer.money >= info.housePrice) {
-                    // Строим дом
-                    info.houseCount++;
-                    currentPlayer.money -= info.housePrice;
-
-                    if (info.houseCount == 5) {
-                        QMessageBox::information(this, "Строительство отеля",
-                                                 QString("Вы построили отель на %1 за %2₼").arg(info.name).arg(info.housePrice));
-                    } else {
-                        QMessageBox::information(this, "Строительство дома",
-                                                 QString("Вы построили дом #%1 на %2 за %3₼")
-                                                     .arg(info.houseCount)
-                                                     .arg(info.name)
-                                                     .arg(info.housePrice));
-                    }
-
-                    // Увеличиваем общее количество домов игрока
-                    if (info.houseCount == 5) {
-                        currentPlayer.houseCount -= 4; // Удаляем 4 дома
-                        currentPlayer.hotelCount++; // Добавляем 1 отель
-                    } else {
-                        currentPlayer.houseCount++;
-                    }
-
-                    // Обновляем отображение информации
-                    updatePlayerInfoDisplay();
-                } else {
-                    QMessageBox::warning(this, "Недостаточно средств",
-                                         QString("У вас недостаточно денег для строительства дома на %1").arg(info.name));
-                }
-            } else {
-                QMessageBox::warning(this, "Максимум строений", "На этой собственности уже построен отель");
-            }
-        } else {
-            QMessageBox::warning(this, "Нет монополии",
-                                 "Для строительства домов вы должны владеть всеми собственностями этого цвета");
         }
     }
 }
@@ -1421,30 +1336,912 @@ TreasuryDialog::TreasuryDialog(QWidget *parent) : QDialog(parent)
         };
 }
 
-void GameWindow::select_cell(int index)
+/*void GameWindow::sellHouse(int cellIndex)
 {
+    int actualCellIndex = GetCellIndex(cellIndex);
+    CellInfo& info = cells[actualCellIndex];
+    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
 
-    if (selected_cell_index >= 0 && selected_cell_index < path.size())
-    {
-        auto [prevRow, prevCol] = path[selected_cell_index];
-        QLayoutItem *prevItem = boardLayout -> itemAtPosition(prevRow, prevCol);
+    // Проверяем, принадлежит ли собственность игроку и есть ли на ней дома
+    if (info.owner == currentPlayerIndex && info.houseCount > 0) {
+        // Продаём дом (половина стоимости)
+        int salePrice = info.housePrice / 2;
 
-        if (prevItem && prevItem -> widget())
-        {
-            prevItem->widget() -> setStyleSheet("");
-        }
-    }
+        // Запоминаем предыдущее количество домов
+        int previousHouseCount = info.houseCount;
 
-    selected_cell_index = index;
-    if (index >= 0 && index < path.size())
-    {
-        auto [row, col] = path[index];
+        // Обновляем визуальное отображение
+        auto [row, col] = path[cellIndex];
         QLayoutItem *item = boardLayout->itemAtPosition(row, col);
-
-        if (item && item->widget())
-        {
-            item->widget()->setStyleSheet("border: 3px solid red;");
-    //        qDebug() << "Выбрана клетка" << index << "с координатами" << row << col;
+        if (item && item->widget()) {
+            CellWidget *cellWidget = qobject_cast<CellWidget*>(item->widget());
+            if (cellWidget) {
+                // Синхронизируем houseCount между GameWindow и CellWidget
+                cellWidget->mutableCellInfo().houseCount = info.houseCount;
+                cellWidget->remove_house();
+                // После remove_house() значение houseCount уменьшится в CellWidget
+                // обновляем значение в GameWindow
+                info.houseCount = cellWidget->getCellInfo().houseCount;
+            }
         }
+
+        // Начисляем деньги
+        currentPlayer.money += salePrice;
+
+        if (previousHouseCount == 5) {
+            currentPlayer.hotelCount--; // Удаляем отель
+            currentPlayer.houseCount += 4; // Добавляем 4 дома
+            QMessageBox::information(this, "Продажа отеля",
+                                     QString("Вы продали отель на %1 и получили %2₼").arg(info.name).arg(salePrice));
+        } else {
+            currentPlayer.houseCount--;
+            QMessageBox::information(this, "Продажа дома",
+                                     QString("Вы продали дом на %1 и получили %2₼").arg(info.name).arg(salePrice));
+        }
+
+        // Обновляем отображение информации
+        updatePlayerInfoDisplay();
+    } else if (info.owner != currentPlayerIndex) {
+        QMessageBox::warning(this, "Чужая собственность",
+                             "Вы не можете продавать дома с чужой собственности");
+    } else if (info.houseCount == 0) {
+        QMessageBox::warning(this, "Нет домов",
+                             "На этой собственности нет домов для продажи");
     }
 }
+
+
+void GameWindow::buildHouse(int cellIndex)
+{
+    int actualCellIndex = GetCellIndex(cellIndex);
+    CellInfo& info = cells[actualCellIndex];
+    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
+
+    // Проверяем, что это собственность типа Property
+    if (info.type != Property) {
+        QMessageBox::warning(this, "Неподходящая ячейка",
+                             "Дома можно строить только на обычной собственности (городах)");
+        return;
+    }
+
+    // Проверяем, принадлежит ли собственность игроку
+    if (info.owner != currentPlayerIndex) {
+        QMessageBox::warning(this, "Чужая собственность",
+                             "Вы не можете строить дома на чужой собственности");
+        return;
+    }
+
+    // Проверяем, не заложена ли собственность
+    if (info.isMortgaged) {
+        QMessageBox::warning(this, "Заложенная собственность",
+                             "Нельзя строить дома на заложенной собственности");
+        return;
+    }
+
+    // Проверяем наличие монополии (все свойства цвета)
+    if (!playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup)) {
+        QMessageBox::warning(this, "Нет монополии",
+                             "Для строительства домов вы должны владеть всеми собственностями этого цвета");
+        return;
+    }
+
+    // Проверяем, не достигнуто ли максимальное количество домов
+    if (info.houseCount >= 5) {
+        QMessageBox::warning(this, "Максимум строений",
+                             "На этой собственности уже построен отель");
+        return;
+    }
+
+    // Проверяем, есть ли у игрока достаточно денег
+    if (currentPlayer.money < info.housePrice) {
+        QMessageBox::warning(this, "Недостаточно средств",
+                             QString("У вас недостаточно денег для строительства дома на %1").arg(info.name));
+        return;
+    }
+
+    // Все проверки пройдены, можно строить дом
+    // Списываем деньги
+    currentPlayer.money -= info.housePrice;
+
+    // Обновляем визуальное отображение дома
+    auto [row, col] = path[cellIndex];
+    QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+    if (item && item->widget()) {
+        CellWidget *cellWidget = qobject_cast<CellWidget*>(item->widget());
+        if (cellWidget) {
+            // Синхронизируем houseCount между GameWindow и CellWidget
+            cellWidget->mutableCellInfo().houseCount = info.houseCount;
+            cellWidget->build_house();
+            // После build_house() значение houseCount увеличится в CellWidget
+            // обновляем значение в GameWindow
+            info.houseCount = cellWidget->getCellInfo().houseCount;
+        }
+    }
+
+    // Выводим сообщение
+    if (info.houseCount == 5) {
+        QMessageBox::information(this, "Строительство отеля",
+                                 QString("Вы построили отель на %1 за %2₼").arg(info.name).arg(info.housePrice));
+    } else {
+        QMessageBox::information(this, "Строительство дома",
+                                 QString("Вы построили дом #%1 на %2 за %3₼")
+                                     .arg(info.houseCount)
+                                     .arg(info.name)
+                                     .arg(info.housePrice));
+    }
+
+    // Обновляем статистику игрока
+    if (info.houseCount == 5) {
+        // Заменяем 4 дома на 1 отель
+        currentPlayer.houseCount -= 4;
+        currentPlayer.hotelCount++;
+    } else {
+        currentPlayer.houseCount++;
+    }
+
+    // Обновляем отображение информации
+    updatePlayerInfoDisplay();
+}
+
+void GameWindow::showHouseManagementDialog(int cellIndex)
+{
+    int actualCellIndex = GetCellIndex(cellIndex);
+    CellInfo& info = cells[actualCellIndex];
+    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
+
+    // Проверка, может ли игрок строить дома на этой собственности
+    bool canBuild = false;
+    bool canSell = false;
+
+    // Проверяем, что это property и есть монополия
+    bool isProperty = (info.type == Property);
+    bool hasMonopoly = isProperty && playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup);
+
+    if (isProperty && info.owner == currentPlayerIndex && !info.isMortgaged && hasMonopoly) {
+        canBuild = (info.houseCount < 5) && (currentPlayer.money >= info.housePrice);
+        canSell = (info.houseCount > 0);
+    }
+
+    // Если это не собственность или нет монополии, покажем информационное сообщение и закроем диалог
+    if (!isProperty) {
+        QMessageBox::information(this, "Информация",
+                                 "Дома можно строить только на обычной собственности (городах).");
+        return;
+    }
+
+    if (info.owner != currentPlayerIndex) {
+        QMessageBox::information(this, "Чужая собственность",
+                                 "Вы не можете строить дома на чужой собственности.");
+        return;
+    }
+
+    if (!hasMonopoly) {
+        QMessageBox::information(this, "Нет монополии",
+                                 "Для строительства домов вы должны владеть всеми собственностями этого цвета.");
+        return;
+    }
+
+    if (info.isMortgaged) {
+        QMessageBox::information(this, "Заложенная собственность",
+                                 "Нельзя строить дома на заложенной собственности.");
+        return;
+    }
+
+    // Создаём диалог
+    QDialog dialog(this);
+    dialog.setWindowTitle("Управление домами");
+    dialog.setMinimumWidth(350);
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    // Верхняя часть - информация о собственности
+    QFrame *infoFrame = new QFrame(&dialog);
+    infoFrame->setFrameShape(QFrame::Box);
+    infoFrame->setLineWidth(1);
+
+    QVBoxLayout *infoLayout = new QVBoxLayout(infoFrame);
+
+    // Название собственности
+    QLabel *nameLabel = new QLabel(QString("<h3>%1</h3>").arg(info.name));
+    nameLabel->setAlignment(Qt::AlignCenter);
+    infoLayout->addWidget(nameLabel);
+
+    // Группа цветов
+    QLabel *colorLabel = new QLabel(QString("Цветовая группа: %1").arg(info.colorGroup));
+    infoLayout->addWidget(colorLabel);
+
+    // Текущая рента
+    int currentRent = calculateRent(cellIndex);
+    QLabel *rentLabel = new QLabel(QString("Текущая рента: %1₼").arg(currentRent));
+    infoLayout->addWidget(rentLabel);
+
+    // Количество домов и стоимость
+    QString houseText;
+    if (info.houseCount == 5) {
+        houseText = "Отель";
+    } else {
+        houseText = QString("%1 дом(а)").arg(info.houseCount);
+    }
+
+    QLabel *houseLabel = new QLabel(QString("Текущие строения: %1").arg(houseText));
+    infoLayout->addWidget(houseLabel);
+
+    QLabel *housePriceLabel = new QLabel(QString("Стоимость строительства дома: %1₼").arg(info.housePrice));
+    infoLayout->addWidget(housePriceLabel);
+
+    QLabel *houseSellLabel = new QLabel(QString("Стоимость продажи дома: %1₼").arg(info.housePrice / 2));
+    infoLayout->addWidget(houseSellLabel);
+
+    // Добавляем информационный фрейм в основной layout
+    layout->addWidget(infoFrame);
+
+    // Средняя часть - таблица рент
+    QGroupBox *rentBox = new QGroupBox("Таблица рент", &dialog);
+    QVBoxLayout *rentLayout = new QVBoxLayout(rentBox);
+
+    QLabel *rentTableLabel = new QLabel();
+    rentTableLabel->setText(QString(
+                                "Базовая рента: %1₼<br>"
+                                "С 1 домом: %2₼<br>"
+                                "С 2 домами: %3₼<br>"
+                                "С 3 домами: %4₼<br>"
+                                "С 4 домами: %5₼<br>"
+                                "С отелем: %6₼"
+                                ).arg(info.rent * (hasMonopoly ? 2 : 1))
+                                .arg(info.rent * 5)
+                                .arg(info.rent * 15)
+                                .arg(info.rent * 45)
+                                .arg(info.rent * 80)
+                                .arg(info.rent * 125));
+
+    rentLayout->addWidget(rentTableLabel);
+    layout->addWidget(rentBox);
+
+    // Нижняя часть - кнопки
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+
+    QPushButton *buildButton = new QPushButton("Построить дом");
+    buildButton->setEnabled(canBuild);
+
+    QPushButton *sellButton = new QPushButton("Продать дом");
+    sellButton->setEnabled(canSell);
+
+    QPushButton *closeButton = new QPushButton("Закрыть");
+
+    buttonLayout->addWidget(buildButton);
+    buttonLayout->addWidget(sellButton);
+    buttonLayout->addWidget(closeButton);
+
+    layout->addLayout(buttonLayout);
+
+    // Подключаем события
+    connect(buildButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+        buildHouse(cellIndex);
+        dialog.accept(); // Использую accept() вместо close(), чтобы диалог точно закрылся
+    });
+
+    connect(sellButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+        sellHouse(cellIndex);
+        dialog.accept(); // Использую accept() вместо close(), чтобы диалог точно закрылся
+    });
+
+    connect(closeButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+
+    // ВАЖНО: Используем стандартную кнопку закрытия вместо OK/Accept
+    dialog.setWindowFlags(dialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
+    // Отображаем диалог как модальный
+    dialog.exec();
+}*/
+
+// Изменения для исправления проблем с домами
+
+// Полностью исправленная версия метода showHouseManagementDialog
+
+void GameWindow::showHouseManagementDialog(int cellIndex)
+{
+    // Проверка границ индекса
+    if (cellIndex < 0 || cellIndex >= path.size()) {
+        QMessageBox::warning(this, "Ошибка", "Некорректный индекс ячейки");
+        return;
+    }
+
+    int actualCellIndex = GetCellIndex(cellIndex);
+
+    // Проверка границ индекса после преобразования
+    if (actualCellIndex < 0 || actualCellIndex >= cells.size()) {
+        QMessageBox::warning(this, "Ошибка", "Невозможно определить тип выбранной ячейки");
+        return;
+    }
+
+    CellInfo& info = cells[actualCellIndex];
+
+    // Самая строгая проверка - это должна быть собственность типа Property
+    if (info.type != Property) {
+        QMessageBox::information(this, "Информация",
+                                 "Дома можно строить только на обычной собственности (городах).");
+
+        // Очищаем выбор клетки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+
+        return;  // Завершаем метод, не открывая диалог
+    }
+
+    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
+
+    // Проверка, может ли игрок строить дома на этой собственности
+    bool canBuild = false;
+    bool canSell = false;
+
+    // Проверяем, что это property и есть монополия
+    bool hasMonopoly = playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup);
+
+    if (info.owner == currentPlayerIndex && !info.isMortgaged && hasMonopoly) {
+        canBuild = (info.houseCount < 5) && (currentPlayer.money >= info.housePrice);
+        canSell = (info.houseCount > 0);
+    }
+
+    // Далее идет проверка по порядку с выходом после каждой неудачной проверки
+    if (info.owner != currentPlayerIndex) {
+        QMessageBox::information(this, "Чужая собственность",
+                                 "Вы не можете строить дома на чужой собственности.");
+
+        // Очищаем выбор клетки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+
+        return;
+    }
+
+    if (!hasMonopoly) {
+        QMessageBox::information(this, "Нет монополии",
+                                 "Для строительства домов вы должны владеть всеми собственностями этого цвета.");
+
+        // Очищаем выбор клетки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+
+        return;
+    }
+
+    if (info.isMortgaged) {
+        QMessageBox::information(this, "Заложенная собственность",
+                                 "Нельзя строить дома на заложенной собственности.");
+
+        // Очищаем выбор клетки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+
+        return;
+    }
+
+    // Все проверки пройдены, можно создавать диалог
+
+    // Создаём диалог
+    QDialog dialog(this);
+    dialog.setWindowTitle("Управление домами");
+    dialog.setMinimumWidth(350);
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    // Верхняя часть - информация о собственности
+    QFrame *infoFrame = new QFrame(&dialog);
+    infoFrame->setFrameShape(QFrame::Box);
+    infoFrame->setLineWidth(1);
+
+    QVBoxLayout *infoLayout = new QVBoxLayout(infoFrame);
+
+    // Название собственности
+    QLabel *nameLabel = new QLabel(QString("<h3>%1</h3>").arg(info.name));
+    nameLabel->setAlignment(Qt::AlignCenter);
+    infoLayout->addWidget(nameLabel);
+
+    // Группа цветов
+    QLabel *colorLabel = new QLabel(QString("Цветовая группа: %1").arg(info.colorGroup));
+    infoLayout->addWidget(colorLabel);
+
+    // Текущая рента
+    int currentRent = calculateRent(cellIndex);
+    QLabel *rentLabel = new QLabel(QString("Текущая рента: %1₼").arg(currentRent));
+    infoLayout->addWidget(rentLabel);
+
+    // Количество домов и стоимость
+    QString houseText;
+    if (info.houseCount == 5) {
+        houseText = "Отель";
+    } else {
+        houseText = QString("%1 дом(а)").arg(info.houseCount);
+    }
+
+    QLabel *houseLabel = new QLabel(QString("Текущие строения: %1").arg(houseText));
+    infoLayout->addWidget(houseLabel);
+
+    QLabel *housePriceLabel = new QLabel(QString("Стоимость строительства дома: %1₼").arg(info.housePrice));
+    infoLayout->addWidget(housePriceLabel);
+
+    QLabel *houseSellLabel = new QLabel(QString("Стоимость продажи дома: %1₼").arg(info.housePrice / 2));
+    infoLayout->addWidget(houseSellLabel);
+
+    // Добавляем информационный фрейм в основной layout
+    layout->addWidget(infoFrame);
+
+    // Средняя часть - таблица рент
+    QGroupBox *rentBox = new QGroupBox("Таблица рент", &dialog);
+    QVBoxLayout *rentLayout = new QVBoxLayout(rentBox);
+
+    QLabel *rentTableLabel = new QLabel();
+    rentTableLabel->setText(QString(
+                                "Базовая рента: %1₼<br>"
+                                "С 1 домом: %2₼<br>"
+                                "С 2 домами: %3₼<br>"
+                                "С 3 домами: %4₼<br>"
+                                "С 4 домами: %5₼<br>"
+                                "С отелем: %6₼"
+                                ).arg(info.rent * (hasMonopoly ? 2 : 1))
+                                .arg(info.rent * 5)
+                                .arg(info.rent * 15)
+                                .arg(info.rent * 45)
+                                .arg(info.rent * 80)
+                                .arg(info.rent * 125));
+
+    rentLayout->addWidget(rentTableLabel);
+    layout->addWidget(rentBox);
+
+    // Нижняя часть - кнопки
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+
+    QPushButton *buildButton = new QPushButton("Построить дом");
+    buildButton->setEnabled(canBuild);
+
+    QPushButton *sellButton = new QPushButton("Продать дом");
+    sellButton->setEnabled(canSell);
+
+    QPushButton *closeButton = new QPushButton("Закрыть");
+
+    buttonLayout->addWidget(buildButton);
+    buttonLayout->addWidget(sellButton);
+    buttonLayout->addWidget(closeButton);
+
+    layout->addLayout(buttonLayout);
+
+    // Подключаем события с очисткой выбора клетки
+    connect(buildButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+        buildHouse(cellIndex);
+        dialog.accept();
+
+        // Очищаем выделение ячейки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+    });
+
+    connect(sellButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+        sellHouse(cellIndex);
+        dialog.accept();
+
+        // Очищаем выделение ячейки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+    });
+
+    connect(closeButton, &QPushButton::clicked, this, [this, &dialog]() {
+        dialog.reject();
+
+        // Очищаем выделение ячейки
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+    });
+
+    // ВАЖНО: Используем стандартную кнопку закрытия вместо OK/Accept
+    dialog.setWindowFlags(dialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
+    // Отображаем диалог как модальный
+    dialog.exec();
+}
+
+void GameWindow::buildHouse(int cellIndex)
+{
+    int actualCellIndex = GetCellIndex(cellIndex);
+    CellInfo& info = cells[actualCellIndex];
+    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
+
+    // Проверяем, что это собственность типа Property
+    if (info.type != Property) {
+        QMessageBox::warning(this, "Неподходящая ячейка",
+                             "Дома можно строить только на обычной собственности (городах)");
+        return; // Строго выходим из функции, не выполняя никаких изменений
+    }
+
+    // Проверяем, принадлежит ли собственность игроку
+    if (info.owner != currentPlayerIndex) {
+        QMessageBox::warning(this, "Чужая собственность",
+                             "Вы не можете строить дома на чужой собственности");
+        return;
+    }
+
+    // Проверяем, не заложена ли собственность
+    if (info.isMortgaged) {
+        QMessageBox::warning(this, "Заложенная собственность",
+                             "Нельзя строить дома на заложенной собственности");
+        return;
+    }
+
+    // Проверяем наличие монополии (все свойства цвета)
+    if (!playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup)) {
+        QMessageBox::warning(this, "Нет монополии",
+                             "Для строительства домов вы должны владеть всеми собственностями этого цвета");
+        return;
+    }
+
+    // Проверяем, не достигнуто ли максимальное количество домов
+    if (info.houseCount >= 5) {
+        QMessageBox::warning(this, "Максимум строений",
+                             "На этой собственности уже построен отель");
+        return;
+    }
+
+    // Проверяем, есть ли у игрока достаточно денег
+    if (currentPlayer.money < info.housePrice) {
+        QMessageBox::warning(this, "Недостаточно средств",
+                             QString("У вас недостаточно денег для строительства дома на %1").arg(info.name));
+        return;
+    }
+
+    // Все проверки пройдены, можно строить дом
+    // Списываем деньги
+    currentPlayer.money -= info.housePrice;
+
+    // Очищаем визуальное отображение старых домов
+    auto [row, col] = path[cellIndex];
+    QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+    CellWidget *cellWidget = nullptr;
+
+    if (item && item->widget()) {
+        cellWidget = qobject_cast<CellWidget*>(item->widget());
+        if (cellWidget) {
+            // Полностью очищаем layout с домами в cellWidget
+            QHBoxLayout *houseLayout = cellWidget->getHouseLayout();
+            QLayoutItem *child;
+            while((child = houseLayout->takeAt(0)) != nullptr) {
+                if (child->widget()) {
+                    child->widget()->deleteLater();
+                }
+                delete child;
+            }
+        }
+    }
+
+    // Увеличиваем счетчик домов
+    info.houseCount++;
+    if (info.houseCount > 5) {
+        info.houseCount = 5;
+    }
+
+    // Отображаем правильное количество домов
+    if (cellWidget) {
+        // Обновляем данные в cellWidget
+        cellWidget->mutableCellInfo().houseCount = info.houseCount;
+
+        // Отображаем домики
+        if (info.houseCount == 5) {
+            // Отель
+            QLabel *hotel = new QLabel(cellWidget);
+            QPixmap hotelPixmap("../../resources/colour5.png");
+            hotel->setPixmap(hotelPixmap.scaled(20, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            hotel->setFixedSize(20, 15);
+            cellWidget->getHouseLayout()->addWidget(hotel);
+
+            QMessageBox::information(this, "Строительство отеля",
+                                     QString("Вы построили отель на %1 за %2₼").arg(info.name).arg(info.housePrice));
+        } else {
+            // Домики
+            for (int i = 0; i < info.houseCount; i++) {
+                QLabel *house = new QLabel(cellWidget);
+                QPixmap housePixmap("../../resources/colour7.png");
+                house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                house->setFixedSize(15, 15);
+                cellWidget->getHouseLayout()->addWidget(house);
+            }
+
+            QMessageBox::information(this, "Строительство дома",
+                                     QString("Вы построили дом #%1 на %2 за %3₼")
+                                         .arg(info.houseCount)
+                                         .arg(info.name)
+                                         .arg(info.housePrice));
+        }
+
+        cellWidget->getHouseLayout()->update();
+        cellWidget->update();
+        cellWidget->updateGeometry();
+    }
+
+    // Обновляем статистику игрока
+    if (info.houseCount == 5) {
+        // Заменяем 4 дома на 1 отель
+        currentPlayer.houseCount -= 4;
+        currentPlayer.hotelCount++;
+    } else {
+        currentPlayer.houseCount++;
+    }
+
+    // Обновляем отображение информации
+    updatePlayerInfoDisplay();
+}
+// 3. Аналогично переработаем метод sellHouse
+void GameWindow::sellHouse(int cellIndex)
+{
+    int actualCellIndex = GetCellIndex(cellIndex);
+    CellInfo& info = cells[actualCellIndex];
+    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
+
+    // Проверяем, что это собственность типа Property
+    if (info.type != Property) {
+        QMessageBox::warning(this, "Неподходящая ячейка",
+                             "Дома можно продавать только на обычной собственности (городах)");
+        return;
+    }
+
+    // Проверяем, принадлежит ли собственность игроку
+    if (info.owner != currentPlayerIndex) {
+        QMessageBox::warning(this, "Чужая собственность",
+                             "Вы не можете продавать дома с чужой собственности");
+        return;
+    }
+
+    // Проверяем наличие домов для продажи
+    if (info.houseCount <= 0) {
+        QMessageBox::warning(this, "Нет домов",
+                             "На этой собственности нет домов для продажи");
+        return;
+    }
+
+    // Запоминаем предыдущее количество домов
+    int previousHouseCount = info.houseCount;
+
+    // Продаём дом (половина стоимости)
+    int salePrice = info.housePrice / 2;
+
+    // Уменьшаем счетчик домов
+    info.houseCount--;
+    if (info.houseCount < 0) info.houseCount = 0;
+
+    // Очищаем визуальное отображение старых домов
+    auto [row, col] = path[cellIndex];
+    QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+    CellWidget *cellWidget = nullptr;
+
+    if (item && item->widget()) {
+        cellWidget = qobject_cast<CellWidget*>(item->widget());
+        if (cellWidget) {
+            // Полностью очищаем layout с домами в cellWidget
+            QHBoxLayout *houseLayout = cellWidget->getHouseLayout();
+            QLayoutItem *child;
+            while((child = houseLayout->takeAt(0)) != nullptr) {
+                if (child->widget()) {
+                    child->widget()->deleteLater();
+                }
+                delete child;
+            }
+
+            // Обновляем данные в cellWidget
+            cellWidget->mutableCellInfo().houseCount = info.houseCount;
+        }
+    }
+
+    // Отображаем правильное количество домов
+    if (cellWidget) {
+        if (info.houseCount == 0) {
+            // Если домов нет, ничего не отображаем
+        }
+        else if (info.houseCount == 4 && previousHouseCount == 5) {
+            // Если был отель, а стало 4 дома
+            for (int i = 0; i < 4; i++) {
+                QLabel *house = new QLabel(cellWidget);
+                QPixmap housePixmap("../../resources/colour7.png");
+                house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                house->setFixedSize(15, 15);
+                cellWidget->getHouseLayout()->addWidget(house);
+            }
+        }
+        else {
+            // Отображаем нужное количество домов
+            for (int i = 0; i < info.houseCount; i++) {
+                QLabel *house = new QLabel(cellWidget);
+                QPixmap housePixmap("../../resources/colour7.png");
+                house->setPixmap(housePixmap.scaled(15, 15, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                house->setFixedSize(15, 15);
+                cellWidget->getHouseLayout()->addWidget(house);
+            }
+        }
+
+        cellWidget->getHouseLayout()->update();
+        cellWidget->update();
+        cellWidget->updateGeometry();
+    }
+
+    // Начисляем деньги
+    currentPlayer.money += salePrice;
+
+    if (previousHouseCount == 5) {
+        currentPlayer.hotelCount--; // Удаляем отель
+        currentPlayer.houseCount += 4; // Добавляем 4 дома
+        QMessageBox::information(this, "Продажа отеля",
+                                 QString("Вы продали отель на %1 и получили %2₼").arg(info.name).arg(salePrice));
+    } else {
+        currentPlayer.houseCount--;
+        QMessageBox::information(this, "Продажа дома",
+                                 QString("Вы продали дом на %1 и получили %2₼").arg(info.name).arg(salePrice));
+    }
+
+    // Обновляем отображение информации
+    updatePlayerInfoDisplay();
+}
+
+
+void GameWindow::on_build_houses_clicked()
+{
+    // Проверяем, выбрана ли ячейка
+    if (selected_cell_index < 0 || selected_cell_index >= path.size()) {
+        QMessageBox::warning(this, "Выберите собственность",
+                             "Сначала выберите собственность, на которой хотите строить дом");
+        return;
+    }
+
+    int actualCellIndex = GetCellIndex(selected_cell_index);
+
+    // Строгая проверка на существование индекса в массиве cells
+    if (actualCellIndex < 0 || actualCellIndex >= cells.size()) {
+        QMessageBox::warning(this, "Ошибка",
+                             "Невозможно определить тип выбранной ячейки");
+        return;
+    }
+
+    CellInfo& info = cells[actualCellIndex];
+
+    if (info.type != Property) {
+        QMessageBox::information(this, "Информация",
+                                 "Дома можно строить только на обычной собственности (городах).");
+
+        // Очищаем выбор клетки, чтобы предотвратить случайные операции
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1; // Сбрасываем выбор
+        }
+
+        return;
+    }
+
+    if (info.owner != currentPlayerIndex) {
+        QMessageBox::information(this, "Чужая собственность",
+                                 "Вы не можете строить дома на чужой собственности.");
+
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1;
+
+        return;
+    }
+
+    if (info.isMortgaged) {
+        QMessageBox::information(this, "Заложенная собственность",
+                                 "Нельзя строить дома на заложенной собственности.");
+
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1;
+        }
+
+        return;
+    }
+
+    if (!playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup)) {
+        QMessageBox::information(this, "Нет монополии",
+                                 "Для строительства домов вы должны владеть всеми собственностями этого цвета.");
+
+        if (selected_cell_index >= 0 && selected_cell_index < path.size()) {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+            if (prevItem && prevItem->widget()) {
+                prevItem->widget()->setStyleSheet("");
+            }
+            selected_cell_index = -1;
+        }
+
+        return;
+    }
+
+    showHouseManagementDialog(selected_cell_index);
+}
+}
+    void GameWindow::select_cell(int index)
+    {
+        // Очищаем предыдущее выделение, если оно было
+        if (selected_cell_index >= 0 && selected_cell_index < path.size())
+        {
+            auto [prevRow, prevCol] = path[selected_cell_index];
+            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+
+            if (prevItem && prevItem->widget())
+            {
+                prevItem->widget()->setStyleSheet("");
+            }
+        }
+
+        // Устанавливаем новый выбранный индекс
+        selected_cell_index = index;
+
+        // Подсвечиваем новую выбранную ячейку
+        if (index >= 0 && index < path.size())
+        {
+            auto [row, col] = path[index];
+            QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+
+            if (item && item->widget())
+            {
+                item->widget()->setStyleSheet("border: 3px solid red;");
+                // Выводим информацию о выбранной ячейке для отладки
+                qDebug() << "Выбрана клетка" << index << "с координатами" << row << col;
+
+                // Проверяем тип клетки и выводим информацию
+                int actualCellIndex = GetCellIndex(index);
+                if (actualCellIndex >= 0 && actualCellIndex < cells.size()) {
+                    CellInfo& info = cells[actualCellIndex];
+                    qDebug() << "Тип клетки:" << info.type << "Имя:" << info.name;
+                }
+            }
+        }
+    }
