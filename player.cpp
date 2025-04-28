@@ -40,7 +40,7 @@ void Player::moveTo(QLayout *layout, int row, int col)
     {
         QWidget *cell = item -> widget();
         this -> setParent(cell);
-        // Немного сдвигаем каждого игрока, чтобы они не перекрывались
+
         int offset = static_cast<int>(playerColor) * 5;
         this -> move(5 + offset, 5 + offset);
         this -> show();

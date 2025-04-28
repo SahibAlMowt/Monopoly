@@ -7,12 +7,12 @@
 
 enum CellTypeO
 {
-    Property,    // Покупаемое имущество (города)
-    Railroad,    // Вокзал
-    Treasury,    // Казна
-    Chance,      // Шанс
-    Tax,         // Налог
-    Corner,      // Угловые клетки (Старт, Тюрьма, Бесплатная парковка, Идти в тюрьму)
+    Property,
+    Railroad,
+    Treasury,
+    Chance,
+    Tax,
+    Corner,
 };
 
 struct CellInfo
@@ -39,11 +39,11 @@ enum class CellType
 };
 
 enum CardType {
-    Money,          // Изменение денежного баланса
-    Movement,       // Перемещение игрока
-    JailRelated,    // Связано с тюрьмой (попадание или освобождение)
-    PropertyRelated, // Действие, связанное с собственностью
-    SkipTurn        // Пропуск хода
+    Money,
+    Movement,
+    JailRelated,
+    PropertyRelated,
+    SkipTurn
 };
 
 
@@ -60,13 +60,11 @@ public:
         return cell_info;
     }
 
-    // Метод для изменения информации о ячейке
     CellInfo &mutableCellInfo()
     {
         return cell_info;
     }
 
-    // Метод для прямого доступа к layout с домами
     QHBoxLayout* getHouseLayout() {
         return houseLayout;
     }

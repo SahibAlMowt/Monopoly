@@ -94,12 +94,11 @@ void CellWidget::build_house()
 void CellWidget::remove_house()
 {
     if (cell_info.houseCount <= 0) {
-        return; // Нечего удалять
+        return;
     }
 
     cell_info.houseCount--;
 
-    // Очищаем текущий layout с домами
     QLayoutItem *child;
     while((child = houseLayout->takeAt(0)) != nullptr) {
         if (child->widget()) {
@@ -108,12 +107,8 @@ void CellWidget::remove_house()
         delete child;
     }
 
-    // Перестраиваем отображение домов
-    if (cell_info.houseCount == 0) {
-        // Если домов нет, ничего не отображаем
-    }
+    if (cell_info.houseCount == 0) {}
     else if (cell_info.houseCount == 4) {
-        // Если был отель, а стало 4 дома
         for (int i = 0; i < 4; i++) {
             QLabel *house = new QLabel(this);
             QPixmap housePixmap("../../resources/colour7.png");
@@ -123,7 +118,6 @@ void CellWidget::remove_house()
         }
     }
     else {
-        // Просто отображаем нужное количество домов
         for (int i = 0; i < cell_info.houseCount; i++) {
             QLabel *house = new QLabel(this);
             QPixmap housePixmap("../../resources/colour7.png");

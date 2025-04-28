@@ -26,19 +26,6 @@
     <string>Quit</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="go_button">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>70</y>
-     <width>80</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Go</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="cube_roll">
    <property name="geometry">
     <rect>

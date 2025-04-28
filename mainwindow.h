@@ -37,6 +37,8 @@ private slots:
     void stop_audio();
     void set_volume_audio(int volume);
 
+    void media_status(QMediaPlayer::MediaStatus status);
+
 private:
 
     Ui::MainWindow *ui;

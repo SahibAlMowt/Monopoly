@@ -108,14 +108,12 @@ private:
     QGridLayout *mainLayout;
     QVector<CellInfo> cells;
 
-    // Новые поля для игровой логики
     QVector<PlayerState> playerStates;
     QVector<Card> treasuryCards;
     QVector<Card> chanceCards;
     QWidget* playerInfoWidget = nullptr;
     QVector<QLabel*> playerLabels;
 
-    // Методы инициализации и игровой логики
     int GetCellIndex(int);
     void initializeCards();
     void initializeCells();
@@ -133,7 +131,6 @@ private:
     int calculateRent(int cellIndex);
     bool playerOwnsAllPropertiesInGroup(int playerId, const QString& colorGroup);
 
-    // Методы обработки игровых действий
     void check_cell_type();
     void show_treasure_dialog();
     void show_treasure_card_in_tab();

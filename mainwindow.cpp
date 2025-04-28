@@ -28,6 +28,9 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     connect(ui -> start_game_button, &QPushButton::clicked, this, &MainWindow::start_game_button);
 
     connect(ui -> quit_main_menu, &QPushButton::clicked, qApp, &QApplication::quit);
+
+    connect(player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::media_status);
+
 }
 
 MainWindow::~MainWindow()
@@ -62,11 +65,21 @@ void MainWindow::play_audio()
 
 void MainWindow::stop_audio()
 {
-    player->stop();
+    player -> stop();
+    player -> setPosition(0);
 }
 
 void MainWindow::set_volume_audio(int volume)
 {
     player -> setVolume(volume);
 }
+
+void MainWindow::media_status(QMediaPlayer::MediaStatus status)
+{
+    if (status == QMediaPlayer::EndOfMedia)
+    {
+        player -> play();
+    }
+}
+
 
