@@ -6,6 +6,8 @@
 
 //#include <QDebug>
 
+#include <QFileInfo>
+
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -22,7 +24,16 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     ui -> slide_audio -> setValue(50);
     connect(ui -> slide_audio, &QSlider::valueChanged, this, &MainWindow::set_volume_audio);
 
-    player -> setMedia(QUrl::fromLocalFile("../../resources/music.mp3"));
+    QFileInfo file_info("../../resources/music.mp3");
+
+    if (!file_info.exists())
+    {
+        qDebug() << "file donk exists" << file_info.absoluteFilePath();
+    }
+
+    QUrl url = QUrl::fromLocalFile(file_info.absoluteFilePath());
+
+    player->setMedia(QMediaContent(url));
     player -> setVolume(50);
 
     connect(ui -> start_game_button, &QPushButton::clicked, this, &MainWindow::start_game_button);
