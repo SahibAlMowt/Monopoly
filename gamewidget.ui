@@ -36,7 +36,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Kubik</string>
+    <string>Kubik roll</string>
    </property>
   </widget>
   <widget class="QPushButton" name="build_houses">
@@ -49,7 +49,20 @@
     </rect>
    </property>
    <property name="text">
-    <string>Home</string>
+    <string>Build House</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="go_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>70</y>
+     <width>80</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Go</string>
    </property>
   </widget>
  </widget>

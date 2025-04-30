@@ -49,6 +49,13 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     int buttonWidth = 100;
     int buttonHeight = 40;
 
+    ui -> go_button -> setGeometry
+                     (
+                         screenGeometry.width() - rightMargin - buttonWidth,
+                         screenGeometry.height() - bottomMargin - buttonHeight * 4 - buttonSpacing * 3,
+                         buttonWidth, buttonHeight
+                         );
+
     ui -> build_houses -> setGeometry
         (
         screenGeometry.width() - rightMargin - buttonWidth,
@@ -73,6 +80,8 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     ui -> cube_roll -> raise();
     ui -> quit_button ->raise();
     ui -> build_houses -> raise();
+
+    ui -> go_button -> raise();
 
     mainLayout = new QGridLayout(this);
     mainLayout->setSpacing(0);
@@ -219,7 +228,7 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     }
 
 
-  //  connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
+    connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
     connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
 
     connect(ui->build_houses, &QPushButton::clicked, this, [this]()
@@ -778,8 +787,8 @@ void GameWindow::check_cell_type()
             playerStates[currentPlayerIndex].inJail = true;
             playerStates[currentPlayerIndex].jailTurns = 3;
 
-            playerPositions[currentPlayerIndex] = 1;
-            auto [row, col] = path[1];
+            playerPositions[currentPlayerIndex] = 10;
+            auto [row, col] = path[10];
             players[currentPlayerIndex]->moveTo(boardLayout, row, col);
         }
         else if (currentPosition == 1) {
@@ -804,7 +813,6 @@ void GameWindow::processCard(const Card& card)
             currentPlayer.money += card.value;
             QMessageBox::information(this, "Деньги", QString("Вы получили %1₼").arg(card.value));
         } else if (card.value < 0) {
-            // Оплата денег
             currentPlayer.money += card.value;
             QMessageBox::information(this, "Деньги", QString("Вы заплатили %1₼").arg(-card.value));
         }
@@ -1198,11 +1206,11 @@ TreasuryDialog::TreasuryDialog(QWidget *parent) : QDialog(parent)
 
     treasury_cards =
         {
-            {"Банковская ошибка в вашу пользу. Получите 200$"},
-            {"Оплатите счет за лечение - 50$"},
-            {"Вы выиграли в лотерею. Получите 100$"},
-            {"С днем рождения! Получите 50$ от каждого игрока"},
-            {"Налог на имущество. Заплатите 25$ за каждый дом"}
+            {"Банковская ошибка в вашу пользу. Получите 200₼"},
+            {"Оплатите счет за лечение - 50₼"},
+            {"Вы выиграли в лотерею. Получите 100₼"},
+            {"С днем рождения! Получите 50₼ от каждого игрока"},
+            {"Налог на имущество. Заплатите 25₼ за каждый дом"}
         };
 }
 
