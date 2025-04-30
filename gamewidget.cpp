@@ -435,22 +435,168 @@ void GameWindow::on_quit_button_clicked()
     this -> hide();
 }
 
+
+
 void GameWindow::move_player(int steps)
 {
     if (playerStates[currentPlayerIndex].inJail) {
-        QMessageBox::information(this, "Тюрьма", "Вы в тюрьме! Чтобы выйти, бросьте дубль, используйте карту выхода или заплатите 50₼");
+        // Если игрок в тюрьме, то показываем диалоговое окно с вариантами
+        QMessageBox msgBox(this);
+        msgBox.setWindowTitle("Тюрьма");
+        msgBox.setText("Вы в тюрьме! Выберите один из вариантов:");
+        msgBox.setIcon(QMessageBox::Question);
 
-        playerStates[currentPlayerIndex].jailTurns--;
+        QPushButton *rollButton = msgBox.addButton("Бросить кубики", QMessageBox::ActionRole);
+        QPushButton *payButton = msgBox.addButton("Заплатить 50₼", QMessageBox::ActionRole);
+        QPushButton *cardButton = nullptr;
 
-        if (playerStates[currentPlayerIndex].jailTurns <= 0) {
-            playerStates[currentPlayerIndex].inJail = false;
-            QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
+        if (playerStates[currentPlayerIndex].hasJailCard) {
+            cardButton = msgBox.addButton("Использовать карту", QMessageBox::ActionRole);
         }
 
-        next_player();
+        QPushButton *stayButton = msgBox.addButton("Остаться в тюрьме", QMessageBox::ActionRole);
+
+        msgBox.exec();
+
+        // Обрабатываем выбор игрока
+        if (msgBox.clickedButton() == payButton) {
+            // Игрок решил заплатить 50₼
+            if (playerStates[currentPlayerIndex].money >= 50) {
+                playerStates[currentPlayerIndex].money -= 50;
+                playerStates[currentPlayerIndex].inJail = false;
+                playerStates[currentPlayerIndex].jailTurns = 0;
+                QMessageBox::information(this, "Выход из тюрьмы", "Вы заплатили 50₼ и вышли из тюрьмы!");
+                updatePlayerInfoDisplay();
+
+                // Теперь передвигаем игрока
+                int oldPosition = playerPositions[currentPlayerIndex];
+                playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+                auto [row, col] = path[playerPositions[currentPlayerIndex]];
+                players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+                if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
+                    playerStates[currentPlayerIndex].money += 200;
+                    QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
+                    updatePlayerInfoDisplay();
+                }
+
+                qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+                check_cell_type();
+                return;
+            } else {
+                QMessageBox::warning(this, "Недостаточно средств", "У вас недостаточно денег для оплаты выхода из тюрьмы!");
+                next_player();
+                return;
+            }
+        } else if (cardButton != nullptr && msgBox.clickedButton() == cardButton) {
+            // Игрок решил использовать карту
+            playerStates[currentPlayerIndex].hasJailCard = false;
+            playerStates[currentPlayerIndex].inJail = false;
+            playerStates[currentPlayerIndex].jailTurns = 0;
+            QMessageBox::information(this, "Выход из тюрьмы", "Вы использовали карту и вышли из тюрьмы!");
+
+            // Теперь передвигаем игрока
+            int oldPosition = playerPositions[currentPlayerIndex];
+            playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+            auto [row, col] = path[playerPositions[currentPlayerIndex]];
+            players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+            if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
+                playerStates[currentPlayerIndex].money += 200;
+                QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
+                updatePlayerInfoDisplay();
+            }
+
+            qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+            check_cell_type();
+            return;
+        } else if (msgBox.clickedButton() == rollButton) {
+            // Игрок решил бросить кубики
+            // Проверяем, выпал ли дубль
+            if (lastRollWasDouble) {
+                playerStates[currentPlayerIndex].inJail = false;
+                playerStates[currentPlayerIndex].jailTurns = 0;
+                QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
+
+                // Теперь передвигаем игрока
+                int oldPosition = playerPositions[currentPlayerIndex];
+                playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+                auto [row, col] = path[playerPositions[currentPlayerIndex]];
+                players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+                if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
+                    playerStates[currentPlayerIndex].money += 200;
+                    QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
+                    updatePlayerInfoDisplay();
+                }
+
+                qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+                check_cell_type();
+                return;
+            } else {
+                // Если не выпал дубль, уменьшаем счетчик ходов в тюрьме
+                playerStates[currentPlayerIndex].jailTurns--;
+
+                if (playerStates[currentPlayerIndex].jailTurns <= 0) {
+                    playerStates[currentPlayerIndex].inJail = false;
+                    QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
+
+                    // Теперь передвигаем игрока
+                    int oldPosition = playerPositions[currentPlayerIndex];
+                    playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+                    auto [row, col] = path[playerPositions[currentPlayerIndex]];
+                    players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+                    if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
+                        playerStates[currentPlayerIndex].money += 200;
+                        QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
+                        updatePlayerInfoDisplay();
+                    }
+
+                    qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+                    check_cell_type();
+                    return;
+                } else {
+                    QMessageBox::information(this, "Тюрьма", QString("Вы не выбросили дубль и остаётесь в тюрьме. Осталось ходов: %1").arg(playerStates[currentPlayerIndex].jailTurns));
+                    next_player();
+                    return;
+                }
+            }
+        } else if (msgBox.clickedButton() == stayButton) {
+            // Игрок остаётся в тюрьме
+            playerStates[currentPlayerIndex].jailTurns--;
+
+            if (playerStates[currentPlayerIndex].jailTurns <= 0) {
+                playerStates[currentPlayerIndex].inJail = false;
+                QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
+
+                // Передвигаем игрока, если он вышел из тюрьмы
+                int oldPosition = playerPositions[currentPlayerIndex];
+                playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
+                auto [row, col] = path[playerPositions[currentPlayerIndex]];
+                players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+                if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
+                    playerStates[currentPlayerIndex].money += 200;
+                    QMessageBox::information(this, "Пересечение Старта", "Вы прошли через Старт и получили 200₼!");
+                    updatePlayerInfoDisplay();
+                }
+
+                qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+                check_cell_type();
+                return;
+            } else {
+                QMessageBox::information(this, "Тюрьма", QString("Вы остаётесь в тюрьме. Осталось ходов: %1").arg(playerStates[currentPlayerIndex].jailTurns));
+                next_player();
+                return;
+            }
+        }
+
+        // Если мы дошли сюда, значит игрок в тюрьме и не может ходить
         return;
     }
 
+    // Стандартный ход (если игрок не в тюрьме)
     int oldPosition = playerPositions[currentPlayerIndex];
     playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
     auto [row, col] = path[playerPositions[currentPlayerIndex]];
@@ -463,7 +609,6 @@ void GameWindow::move_player(int steps)
     }
 
     qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
-
     check_cell_type();
 }
 
@@ -597,6 +742,8 @@ QStringList cube_images =
 };
 
 
+
+
 void GameWindow::start_cubes_roll()
 {
     QSize cube_size(100, 100);
@@ -606,7 +753,6 @@ void GameWindow::start_cubes_roll()
     int boardWidth = boardWidget->width();
     int boardHeight = boardWidget->height();
     QPoint boardTopLeft = boardWidget->mapTo(this, QPoint(0, 0));
-
 
     int totalWidth = cube_size.width() * 2 + spacing;
     int x = boardTopLeft.x() + (boardWidth - totalWidth) / 2;
@@ -650,10 +796,10 @@ void GameWindow::start_cubes_roll()
                     cube_label_1->setPixmap(QPixmap(cube_images[final1 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
                     cube_label_2->setPixmap(QPixmap(cube_images[final2 - 1]).scaled(cube_size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
-                    if (playerStates[currentPlayerIndex].inJail && final1 == final2) {
-                        playerStates[currentPlayerIndex].inJail = false;
-                        QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
-                    }
+                    // Определяем, был ли выброшен дубль
+                    lastRollWasDouble = (final1 == final2);
+
+                    // Убираем обработку выхода из тюрьмы отсюда, она будет в move_player
 
                     QTimer::singleShot(2200, this, [=]()
                                        {
@@ -662,9 +808,8 @@ void GameWindow::start_cubes_roll()
 
                                            move_player(final1 + final2);
 
-                                           if (final1 == final2 && !playerStates[currentPlayerIndex].inJail) {
+                                           if (lastRollWasDouble && !playerStates[currentPlayerIndex].inJail) {
                                                QMessageBox::information(this, "Дубль!", "Вы выбросили дубль! Ходите еще раз.");
-                                               currentPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount;
                                            }
                                        });
                 }
@@ -689,6 +834,8 @@ int GameWindow::GetCellIndex(int pathIndex)
     return 0;
 }
 
+
+
 void GameWindow::check_cell_type()
 {
     int currentPosition = playerPositions[currentPlayerIndex];
@@ -696,7 +843,6 @@ void GameWindow::check_cell_type()
     CellInfo& info = cells[cellIndex];
 
     qDebug() << "Игрок на ячейке:" << info.name << "тип:" << static_cast<int>(info.type);
-
 
     switch (info.type)
     {
@@ -727,7 +873,6 @@ void GameWindow::check_cell_type()
             QMessageBox::information(this, "Шанс", card.text);
 
             processCard(card);
-
 
             if (!card.keepCard) {
                 chanceCards.removeAt(cardIndex);
@@ -771,17 +916,17 @@ void GameWindow::check_cell_type()
         break;
 
     case Tax:
-        {
-            int taxAmount = info.price;
-            playerStates[currentPlayerIndex].money -= taxAmount;
-            QMessageBox::information(this, "Налог",
-                                     QString("Вы заплатили %1₼ налога").arg(taxAmount));
-            updatePlayerInfoDisplay();
-        }
-        break;
+    {
+        int taxAmount = info.price;
+        playerStates[currentPlayerIndex].money -= taxAmount;
+        QMessageBox::information(this, "Налог",
+                                 QString("Вы заплатили %1₼ налога").arg(taxAmount));
+        updatePlayerInfoDisplay();
+    }
+    break;
 
     case Corner:
-        if (currentPosition == 3) {
+        if (currentPosition == 30) {  // 3 is the position in the cells array, 30 is the position in the path array
             QMessageBox::information(this, "В тюрьму", "Вы отправляетесь в тюрьму!");
 
             playerStates[currentPlayerIndex].inJail = true;
@@ -791,17 +936,28 @@ void GameWindow::check_cell_type()
             auto [row, col] = path[10];
             players[currentPlayerIndex]->moveTo(boardLayout, row, col);
         }
-        else if (currentPosition == 1) {
+        else if (currentPosition == 10) {
             QMessageBox::information(this, "Посещение тюрьмы", "Вы просто посещаете тюрьму.");
         }
-        else if (currentPosition == 2) {
+        else if (currentPosition == 20) {
             QMessageBox::information(this, "Бесплатная парковка", "Отдохните на бесплатной парковке.");
         }
         break;
     }
 
-    QTimer::singleShot(1000, this, &GameWindow::next_player);
+    // Используем переменную lastRollWasDouble которую мы установили в start_cubes_roll
+
+    // Only move to the next player if it's not a double roll or if player is in jail
+    if (!lastRollWasDouble || playerStates[currentPlayerIndex].inJail) {
+        QTimer::singleShot(1000, this, &GameWindow::next_player);
+    } else {
+        // If it's a double, update the player turn label to show it's still their turn
+        QTimer::singleShot(1000, this, &GameWindow::updatePlayerTurnLabel);
+    }
 }
+
+
+
 
 void GameWindow::processCard(const Card& card)
 {
@@ -824,7 +980,6 @@ void GameWindow::processCard(const Card& card)
             playerPositions[currentPlayerIndex] = card.targetPosition;
             auto [row, col] = path[card.targetPosition];
             players[currentPlayerIndex]->moveTo(boardLayout, row, col);
-
 
             if (card.targetPosition < oldPosition && card.targetPosition != 1) {
                 currentPlayer.money += 200;
@@ -925,15 +1080,19 @@ void GameWindow::processCard(const Card& card)
         if (card.keepCard) {
             currentPlayer.hasJailCard = true;
             QMessageBox::information(this, "Выход из тюрьмы", "Вы получили карту выхода из тюрьмы. Сохраните ее.");
-        } else {
+        } else if (card.targetPosition == 10) {
+            // Go to jail card
             currentPlayer.inJail = true;
             currentPlayer.jailTurns = 3;
 
-            playerPositions[currentPlayerIndex] = 1;
-            auto [row, col] = path[1];
+            playerPositions[currentPlayerIndex] = 10;
+            auto [row, col] = path[10];
             players[currentPlayerIndex]->moveTo(boardLayout, row, col);
 
             QMessageBox::information(this, "Тюрьма", "Вы отправляетесь в тюрьму!");
+        } else {
+            // This is for any other jail-related card
+            QMessageBox::information(this, "Тюрьма", card.text);
         }
         break;
 
@@ -1214,307 +1373,6 @@ TreasuryDialog::TreasuryDialog(QWidget *parent) : QDialog(parent)
         };
 }
 
-/*void GameWindow::sellHouse(int cellIndex)
-{
-    int actualCellIndex = GetCellIndex(cellIndex);
-    CellInfo& info = cells[actualCellIndex];
-    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
-
-    // Проверяем, принадлежит ли собственность игроку и есть ли на ней дома
-    if (info.owner == currentPlayerIndex && info.houseCount > 0) {
-        // Продаём дом (половина стоимости)
-        int salePrice = info.housePrice / 2;
-
-        // Запоминаем предыдущее количество домов
-        int previousHouseCount = info.houseCount;
-
-        // Обновляем визуальное отображение
-        auto [row, col] = path[cellIndex];
-        QLayoutItem *item = boardLayout->itemAtPosition(row, col);
-        if (item && item->widget()) {
-            CellWidget *cellWidget = qobject_cast<CellWidget*>(item->widget());
-            if (cellWidget) {
-                // Синхронизируем houseCount между GameWindow и CellWidget
-                cellWidget->mutableCellInfo().houseCount = info.houseCount;
-                cellWidget->remove_house();
-                // После remove_house() значение houseCount уменьшится в CellWidget
-                // обновляем значение в GameWindow
-                info.houseCount = cellWidget->getCellInfo().houseCount;
-            }
-        }
-
-        // Начисляем деньги
-        currentPlayer.money += salePrice;
-
-        if (previousHouseCount == 5) {
-            currentPlayer.hotelCount--; // Удаляем отель
-            currentPlayer.houseCount += 4; // Добавляем 4 дома
-            QMessageBox::information(this, "Продажа отеля",
-                                     QString("Вы продали отель на %1 и получили %2₼").arg(info.name).arg(salePrice));
-        } else {
-            currentPlayer.houseCount--;
-            QMessageBox::information(this, "Продажа дома",
-                                     QString("Вы продали дом на %1 и получили %2₼").arg(info.name).arg(salePrice));
-        }
-
-        // Обновляем отображение информации
-        updatePlayerInfoDisplay();
-    } else if (info.owner != currentPlayerIndex) {
-        QMessageBox::warning(this, "Чужая собственность",
-                             "Вы не можете продавать дома с чужой собственности");
-    } else if (info.houseCount == 0) {
-        QMessageBox::warning(this, "Нет домов",
-                             "На этой собственности нет домов для продажи");
-    }
-}
-
-
-void GameWindow::buildHouse(int cellIndex)
-{
-    int actualCellIndex = GetCellIndex(cellIndex);
-    CellInfo& info = cells[actualCellIndex];
-    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
-
-    // Проверяем, что это собственность типа Property
-    if (info.type != Property) {
-        QMessageBox::warning(this, "Неподходящая ячейка",
-                             "Дома можно строить только на обычной собственности (городах)");
-        return;
-    }
-
-    // Проверяем, принадлежит ли собственность игроку
-    if (info.owner != currentPlayerIndex) {
-        QMessageBox::warning(this, "Чужая собственность",
-                             "Вы не можете строить дома на чужой собственности");
-        return;
-    }
-
-    // Проверяем, не заложена ли собственность
-    if (info.isMortgaged) {
-        QMessageBox::warning(this, "Заложенная собственность",
-                             "Нельзя строить дома на заложенной собственности");
-        return;
-    }
-
-    // Проверяем наличие монополии (все свойства цвета)
-    if (!playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup)) {
-        QMessageBox::warning(this, "Нет монополии",
-                             "Для строительства домов вы должны владеть всеми собственностями этого цвета");
-        return;
-    }
-
-    // Проверяем, не достигнуто ли максимальное количество домов
-    if (info.houseCount >= 5) {
-        QMessageBox::warning(this, "Максимум строений",
-                             "На этой собственности уже построен отель");
-        return;
-    }
-
-    // Проверяем, есть ли у игрока достаточно денег
-    if (currentPlayer.money < info.housePrice) {
-        QMessageBox::warning(this, "Недостаточно средств",
-                             QString("У вас недостаточно денег для строительства дома на %1").arg(info.name));
-        return;
-    }
-
-    // Все проверки пройдены, можно строить дом
-    // Списываем деньги
-    currentPlayer.money -= info.housePrice;
-
-    // Обновляем визуальное отображение дома
-    auto [row, col] = path[cellIndex];
-    QLayoutItem *item = boardLayout->itemAtPosition(row, col);
-    if (item && item->widget()) {
-        CellWidget *cellWidget = qobject_cast<CellWidget*>(item->widget());
-        if (cellWidget) {
-            // Синхронизируем houseCount между GameWindow и CellWidget
-            cellWidget->mutableCellInfo().houseCount = info.houseCount;
-            cellWidget->build_house();
-            // После build_house() значение houseCount увеличится в CellWidget
-            // обновляем значение в GameWindow
-            info.houseCount = cellWidget->getCellInfo().houseCount;
-        }
-    }
-
-    // Выводим сообщение
-    if (info.houseCount == 5) {
-        QMessageBox::information(this, "Строительство отеля",
-                                 QString("Вы построили отель на %1 за %2₼").arg(info.name).arg(info.housePrice));
-    } else {
-        QMessageBox::information(this, "Строительство дома",
-                                 QString("Вы построили дом #%1 на %2 за %3₼")
-                                     .arg(info.houseCount)
-                                     .arg(info.name)
-                                     .arg(info.housePrice));
-    }
-
-    // Обновляем статистику игрока
-    if (info.houseCount == 5) {
-        // Заменяем 4 дома на 1 отель
-        currentPlayer.houseCount -= 4;
-        currentPlayer.hotelCount++;
-    } else {
-        currentPlayer.houseCount++;
-    }
-
-    // Обновляем отображение информации
-    updatePlayerInfoDisplay();
-}
-
-void GameWindow::showHouseManagementDialog(int cellIndex)
-{
-    int actualCellIndex = GetCellIndex(cellIndex);
-    CellInfo& info = cells[actualCellIndex];
-    PlayerState& currentPlayer = playerStates[currentPlayerIndex];
-
-    // Проверка, может ли игрок строить дома на этой собственности
-    bool canBuild = false;
-    bool canSell = false;
-
-    // Проверяем, что это property и есть монополия
-    bool isProperty = (info.type == Property);
-    bool hasMonopoly = isProperty && playerOwnsAllPropertiesInGroup(currentPlayerIndex, info.colorGroup);
-
-    if (isProperty && info.owner == currentPlayerIndex && !info.isMortgaged && hasMonopoly) {
-        canBuild = (info.houseCount < 5) && (currentPlayer.money >= info.housePrice);
-        canSell = (info.houseCount > 0);
-    }
-
-    // Если это не собственность или нет монополии, покажем информационное сообщение и закроем диалог
-    if (!isProperty) {
-        QMessageBox::information(this, "Информация",
-                                 "Дома можно строить только на обычной собственности (городах).");
-        return;
-    }
-
-    if (info.owner != currentPlayerIndex) {
-        QMessageBox::information(this, "Чужая собственность",
-                                 "Вы не можете строить дома на чужой собственности.");
-        return;
-    }
-
-    if (!hasMonopoly) {
-        QMessageBox::information(this, "Нет монополии",
-                                 "Для строительства домов вы должны владеть всеми собственностями этого цвета.");
-        return;
-    }
-
-    if (info.isMortgaged) {
-        QMessageBox::information(this, "Заложенная собственность",
-                                 "Нельзя строить дома на заложенной собственности.");
-        return;
-    }
-
-    // Создаём диалог
-    QDialog dialog(this);
-    dialog.setWindowTitle("Управление домами");
-    dialog.setMinimumWidth(350);
-
-    QVBoxLayout *layout = new QVBoxLayout(&dialog);
-
-    // Верхняя часть - информация о собственности
-    QFrame *infoFrame = new QFrame(&dialog);
-    infoFrame->setFrameShape(QFrame::Box);
-    infoFrame->setLineWidth(1);
-
-    QVBoxLayout *infoLayout = new QVBoxLayout(infoFrame);
-
-    // Название собственности
-    QLabel *nameLabel = new QLabel(QString("<h3>%1</h3>").arg(info.name));
-    nameLabel->setAlignment(Qt::AlignCenter);
-    infoLayout->addWidget(nameLabel);
-
-    // Группа цветов
-    QLabel *colorLabel = new QLabel(QString("Цветовая группа: %1").arg(info.colorGroup));
-    infoLayout->addWidget(colorLabel);
-
-    // Текущая рента
-    int currentRent = calculateRent(cellIndex);
-    QLabel *rentLabel = new QLabel(QString("Текущая рента: %1₼").arg(currentRent));
-    infoLayout->addWidget(rentLabel);
-
-    // Количество домов и стоимость
-    QString houseText;
-    if (info.houseCount == 5) {
-        houseText = "Отель";
-    } else {
-        houseText = QString("%1 дом(а)").arg(info.houseCount);
-    }
-
-    QLabel *houseLabel = new QLabel(QString("Текущие строения: %1").arg(houseText));
-    infoLayout->addWidget(houseLabel);
-
-    QLabel *housePriceLabel = new QLabel(QString("Стоимость строительства дома: %1₼").arg(info.housePrice));
-    infoLayout->addWidget(housePriceLabel);
-
-    QLabel *houseSellLabel = new QLabel(QString("Стоимость продажи дома: %1₼").arg(info.housePrice / 2));
-    infoLayout->addWidget(houseSellLabel);
-
-    // Добавляем информационный фрейм в основной layout
-    layout->addWidget(infoFrame);
-
-    // Средняя часть - таблица рент
-    QGroupBox *rentBox = new QGroupBox("Таблица рент", &dialog);
-    QVBoxLayout *rentLayout = new QVBoxLayout(rentBox);
-
-    QLabel *rentTableLabel = new QLabel();
-    rentTableLabel->setText(QString(
-                                "Базовая рента: %1₼<br>"
-                                "С 1 домом: %2₼<br>"
-                                "С 2 домами: %3₼<br>"
-                                "С 3 домами: %4₼<br>"
-                                "С 4 домами: %5₼<br>"
-                                "С отелем: %6₼"
-                                ).arg(info.rent * (hasMonopoly ? 2 : 1))
-                                .arg(info.rent * 5)
-                                .arg(info.rent * 15)
-                                .arg(info.rent * 45)
-                                .arg(info.rent * 80)
-                                .arg(info.rent * 125));
-
-    rentLayout->addWidget(rentTableLabel);
-    layout->addWidget(rentBox);
-
-    // Нижняя часть - кнопки
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-
-    QPushButton *buildButton = new QPushButton("Построить дом");
-    buildButton->setEnabled(canBuild);
-
-    QPushButton *sellButton = new QPushButton("Продать дом");
-    sellButton->setEnabled(canSell);
-
-    QPushButton *closeButton = new QPushButton("Закрыть");
-
-    buttonLayout->addWidget(buildButton);
-    buttonLayout->addWidget(sellButton);
-    buttonLayout->addWidget(closeButton);
-
-    layout->addLayout(buttonLayout);
-
-    // Подключаем события
-    connect(buildButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
-        buildHouse(cellIndex);
-        dialog.accept(); // Использую accept() вместо close(), чтобы диалог точно закрылся
-    });
-
-    connect(sellButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
-        sellHouse(cellIndex);
-        dialog.accept(); // Использую accept() вместо close(), чтобы диалог точно закрылся
-    });
-
-    connect(closeButton, &QPushButton::clicked, &dialog, &QDialog::reject);
-
-    // ВАЖНО: Используем стандартную кнопку закрытия вместо OK/Accept
-    dialog.setWindowFlags(dialog.windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
-    // Отображаем диалог как модальный
-    dialog.exec();
-}*/
-
-// Изменения для исправления проблем с домами
-
-// Полностью исправленная версия метода showHouseManagementDialog
 
 void GameWindow::showHouseManagementDialog(int cellIndex)
 {

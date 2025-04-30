@@ -108,6 +108,8 @@ private:
     QGridLayout *mainLayout;
     QVector<CellInfo> cells;
 
+    bool lastRollWasDouble = false;
+
     QVector<PlayerState> playerStates;
     QVector<Card> treasuryCards;
     QVector<Card> chanceCards;
