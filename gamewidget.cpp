@@ -49,12 +49,12 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     int buttonWidth = 100;
     int buttonHeight = 40;
 
-    ui -> go_button -> setGeometry
+  /*  ui -> go_button -> setGeometry
         (
             screenGeometry.width() - rightMargin - buttonWidth,
             screenGeometry.height() - bottomMargin - buttonHeight * 4 - buttonSpacing * 3,
             buttonWidth, buttonHeight
-            );
+            );*/
 
     ui -> monopoly -> setGeometry
         (
@@ -82,7 +82,7 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
 
     ui -> monopoly -> raise();
 
-    ui -> go_button -> raise();
+    //ui -> go_button -> raise();
 
     mainLayout = new QGridLayout(this);
     mainLayout->setSpacing(0);
@@ -229,7 +229,7 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     }
 
 
-    connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
+    //connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
     connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
 
    /* connect(ui->build_houses, &QPushButton::clicked, this, [this]()
