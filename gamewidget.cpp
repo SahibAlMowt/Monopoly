@@ -49,6 +49,13 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     int buttonWidth = 100;
     int buttonHeight = 40;
 
+    ui -> sell_house -> setGeometry
+        (
+            screenGeometry.width() - rightMargin - buttonWidth,
+            screenGeometry.height() - bottomMargin - buttonHeight * 5 - buttonSpacing * 4,
+            buttonWidth, buttonHeight
+            );
+
     ui -> go_button -> setGeometry
                      (
                          screenGeometry.width() - rightMargin - buttonWidth,
@@ -82,6 +89,8 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     ui -> build_houses -> raise();
 
     ui -> go_button -> raise();
+
+    ui -> sell_house -> raise();
 
     mainLayout = new QGridLayout(this);
     mainLayout->setSpacing(0);
@@ -356,7 +365,7 @@ void GameWindow::initializeCards() {
         Card("Банк выплачивает вам дивиденды в размере 50₼", Money, 50),
         Card("Выход из тюрьмы. Сохраните эту карту", JailRelated, 0, -1, true),
         Card("Вернитесь на 3 поля назад", Movement, -3),
-        Card("Отправляйтесь на Баку", Movement, 0, 39),
+        Card("Отправляйтесь на Баку", Movement, 0, 38),
         Card("Общий ремонт собственности: заплатите 25₼ за каждый дом и 100₼ за отель", PropertyRelated, -1),
         Card("Штраф за превышение скорости - 15₼", Money, -15),
         Card("Штраф за пьянство - 20₼", Money, -20),
@@ -1544,7 +1553,7 @@ void GameWindow::showHouseManagementDialog(int cellIndex)
 
     layout->addLayout(buttonLayout);
 
-    connect(buildButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+    connect(ui -> build_houses, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
         buildHouse(cellIndex);
         dialog.accept();
 
@@ -1558,7 +1567,7 @@ void GameWindow::showHouseManagementDialog(int cellIndex)
         }
     });
 
-    connect(sellButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+    connect(ui -> sell_house, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
         sellHouse(cellIndex);
         dialog.accept();
 
@@ -1878,36 +1887,37 @@ void GameWindow::on_build_houses_clicked()
     showHouseManagementDialog(selected_cell_index);
 }
 }
-    void GameWindow::select_cell(int index)
+
+void GameWindow::select_cell(int index)
+{
+    if (selected_cell_index >= 0 && selected_cell_index < path.size())
     {
-        if (selected_cell_index >= 0 && selected_cell_index < path.size())
-        {
-            auto [prevRow, prevCol] = path[selected_cell_index];
-            QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
+        auto [prevRow, prevCol] = path[selected_cell_index];
+        QLayoutItem *prevItem = boardLayout->itemAtPosition(prevRow, prevCol);
 
-            if (prevItem && prevItem->widget())
-            {
-                prevItem->widget()->setStyleSheet("");
-            }
+        if (prevItem && prevItem->widget())
+        {
+            prevItem->widget()->setStyleSheet("");
         }
+    }
 
-        selected_cell_index = index;
+    selected_cell_index = index;
 
-        if (index >= 0 && index < path.size())
+    if (index >= 0 && index < path.size())
+    {
+        auto [row, col] = path[index];
+        QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+
+        if (item && item->widget())
         {
-            auto [row, col] = path[index];
-            QLayoutItem *item = boardLayout->itemAtPosition(row, col);
+            item->widget()->setStyleSheet("border: 3px solid red;");
+  //          qDebug() << "Выбрана клетка" << index << "с координатами" << row << col;
 
-            if (item && item->widget())
-            {
-                item->widget()->setStyleSheet("border: 3px solid red;");
-      //          qDebug() << "Выбрана клетка" << index << "с координатами" << row << col;
-
-                int actualCellIndex = GetCellIndex(index);
-                if (actualCellIndex >= 0 && actualCellIndex < cells.size()) {
-                    CellInfo& info = cells[actualCellIndex];
-                    qDebug() << "Тип клетки:" << info.type << "Имя:" << info.name;
-                }
+            int actualCellIndex = GetCellIndex(index);
+            if (actualCellIndex >= 0 && actualCellIndex < cells.size()) {
+                CellInfo& info = cells[actualCellIndex];
+          //      qDebug() << "Тип клетки:" << info.type << "Имя:" << info.name;
             }
         }
     }
+}

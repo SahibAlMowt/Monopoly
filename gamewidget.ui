@@ -65,6 +65,19 @@
     <string>Go</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="sell_house">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>160</y>
+     <width>80</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Sell</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
