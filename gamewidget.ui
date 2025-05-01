@@ -39,43 +39,30 @@
     <string>Kubik roll</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="build_houses">
+  <widget class="QPushButton" name="monopoly">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>130</y>
+     <y>70</y>
      <width>80</width>
-     <height>24</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Build House</string>
+    <string>Monopoly</string>
    </property>
   </widget>
   <widget class="QPushButton" name="go_button">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>70</y>
+     <y>130</y>
      <width>80</width>
-     <height>24</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Go</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="sell_house">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>160</y>
-     <width>80</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Sell</string>
+    <string>go</string>
    </property>
   </widget>
  </widget>

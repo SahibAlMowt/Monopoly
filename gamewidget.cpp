@@ -41,7 +41,7 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
 
     ui -> cube_roll -> setParent(this);
     ui -> quit_button -> setParent(this);
-    ui -> build_houses -> setParent(this);
+    ui -> monopoly -> setParent(this);
 
     int rightMargin = 20;
     int bottomMargin = 20;
@@ -49,29 +49,22 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     int buttonWidth = 100;
     int buttonHeight = 40;
 
-    ui -> sell_house -> setGeometry
+    ui -> go_button -> setGeometry
         (
             screenGeometry.width() - rightMargin - buttonWidth,
-            screenGeometry.height() - bottomMargin - buttonHeight * 5 - buttonSpacing * 4,
+            screenGeometry.height() - bottomMargin - buttonHeight * 4 - buttonSpacing * 3,
             buttonWidth, buttonHeight
             );
 
-    ui -> go_button -> setGeometry
-                     (
-                         screenGeometry.width() - rightMargin - buttonWidth,
-                         screenGeometry.height() - bottomMargin - buttonHeight * 4 - buttonSpacing * 3,
-                         buttonWidth, buttonHeight
-                         );
-
-    ui -> build_houses -> setGeometry
+    ui -> monopoly -> setGeometry
         (
-        screenGeometry.width() - rightMargin - buttonWidth,
-        screenGeometry.height() - bottomMargin - buttonHeight * 3 - buttonSpacing * 2,
-        buttonWidth, buttonHeight
+            screenGeometry.width() - rightMargin - buttonWidth,
+            screenGeometry.height() - bottomMargin - buttonHeight * 3 - buttonSpacing * 2,
+            buttonWidth, buttonHeight
             );
 
 
-    ui->cube_roll->setGeometry
+    ui -> cube_roll -> setGeometry
         (
         screenGeometry.width() - rightMargin - buttonWidth,
         screenGeometry.height() - bottomMargin - buttonHeight * 2 - buttonSpacing,
@@ -86,11 +79,10 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
 
     ui -> cube_roll -> raise();
     ui -> quit_button ->raise();
-    ui -> build_houses -> raise();
+
+    ui -> monopoly -> raise();
 
     ui -> go_button -> raise();
-
-    ui -> sell_house -> raise();
 
     mainLayout = new QGridLayout(this);
     mainLayout->setSpacing(0);
@@ -240,7 +232,7 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
     connect(ui -> go_button, &QPushButton::clicked, this, [=]() {move_player(1);});
     connect(ui -> cube_roll, &QPushButton::clicked, this, &GameWindow::start_cubes_roll);
 
-    connect(ui->build_houses, &QPushButton::clicked, this, [this]()
+   /* connect(ui->build_houses, &QPushButton::clicked, this, [this]()
     {
         if (selected_cell_index >= 0 && selected_cell_index < path.size())
         {
@@ -260,7 +252,11 @@ GameWindow::GameWindow(int playerCount, QWidget *parent) : QDialog(parent), ui(n
         {
        //     qDebug() << "Сначала выберите клетку для строительства";
         }
-    });
+    });*/
+
+ //   int index = 3;
+
+ //   connect(ui -> monop, &QPushButton::clicked, this, [this, index](){showHouseManagementDialog(index);});
 
 
     cube_label_1 = new QLabel(this);
@@ -449,7 +445,6 @@ void GameWindow::on_quit_button_clicked()
 void GameWindow::move_player(int steps)
 {
     if (playerStates[currentPlayerIndex].inJail) {
-        // Если игрок в тюрьме, то показываем диалоговое окно с вариантами
         QMessageBox msgBox(this);
         msgBox.setWindowTitle("Тюрьма");
         msgBox.setText("Вы в тюрьме! Выберите один из вариантов:");
@@ -467,9 +462,7 @@ void GameWindow::move_player(int steps)
 
         msgBox.exec();
 
-        // Обрабатываем выбор игрока
         if (msgBox.clickedButton() == payButton) {
-            // Игрок решил заплатить 50₼
             if (playerStates[currentPlayerIndex].money >= 50) {
                 playerStates[currentPlayerIndex].money -= 50;
                 playerStates[currentPlayerIndex].inJail = false;
@@ -477,7 +470,6 @@ void GameWindow::move_player(int steps)
                 QMessageBox::information(this, "Выход из тюрьмы", "Вы заплатили 50₼ и вышли из тюрьмы!");
                 updatePlayerInfoDisplay();
 
-                // Теперь передвигаем игрока
                 int oldPosition = playerPositions[currentPlayerIndex];
                 playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
                 auto [row, col] = path[playerPositions[currentPlayerIndex]];
@@ -498,13 +490,11 @@ void GameWindow::move_player(int steps)
                 return;
             }
         } else if (cardButton != nullptr && msgBox.clickedButton() == cardButton) {
-            // Игрок решил использовать карту
             playerStates[currentPlayerIndex].hasJailCard = false;
             playerStates[currentPlayerIndex].inJail = false;
             playerStates[currentPlayerIndex].jailTurns = 0;
             QMessageBox::information(this, "Выход из тюрьмы", "Вы использовали карту и вышли из тюрьмы!");
 
-            // Теперь передвигаем игрока
             int oldPosition = playerPositions[currentPlayerIndex];
             playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
             auto [row, col] = path[playerPositions[currentPlayerIndex]];
@@ -520,14 +510,11 @@ void GameWindow::move_player(int steps)
             check_cell_type();
             return;
         } else if (msgBox.clickedButton() == rollButton) {
-            // Игрок решил бросить кубики
-            // Проверяем, выпал ли дубль
             if (lastRollWasDouble) {
                 playerStates[currentPlayerIndex].inJail = false;
                 playerStates[currentPlayerIndex].jailTurns = 0;
                 QMessageBox::information(this, "Выход из тюрьмы", "Вы выбросили дубль и выходите из тюрьмы!");
 
-                // Теперь передвигаем игрока
                 int oldPosition = playerPositions[currentPlayerIndex];
                 playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
                 auto [row, col] = path[playerPositions[currentPlayerIndex]];
@@ -543,14 +530,12 @@ void GameWindow::move_player(int steps)
                 check_cell_type();
                 return;
             } else {
-                // Если не выпал дубль, уменьшаем счетчик ходов в тюрьме
                 playerStates[currentPlayerIndex].jailTurns--;
 
                 if (playerStates[currentPlayerIndex].jailTurns <= 0) {
                     playerStates[currentPlayerIndex].inJail = false;
                     QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
 
-                    // Теперь передвигаем игрока
                     int oldPosition = playerPositions[currentPlayerIndex];
                     playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
                     auto [row, col] = path[playerPositions[currentPlayerIndex]];
@@ -572,14 +557,12 @@ void GameWindow::move_player(int steps)
                 }
             }
         } else if (msgBox.clickedButton() == stayButton) {
-            // Игрок остаётся в тюрьме
             playerStates[currentPlayerIndex].jailTurns--;
 
             if (playerStates[currentPlayerIndex].jailTurns <= 0) {
                 playerStates[currentPlayerIndex].inJail = false;
                 QMessageBox::information(this, "Тюрьма", "Ваше время в тюрьме истекло, вы свободны!");
 
-                // Передвигаем игрока, если он вышел из тюрьмы
                 int oldPosition = playerPositions[currentPlayerIndex];
                 playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
                 auto [row, col] = path[playerPositions[currentPlayerIndex]];
@@ -601,15 +584,17 @@ void GameWindow::move_player(int steps)
             }
         }
 
-        // Если мы дошли сюда, значит игрок в тюрьме и не может ходить
         return;
     }
 
-    // Стандартный ход (если игрок не в тюрьме)
     int oldPosition = playerPositions[currentPlayerIndex];
     playerPositions[currentPlayerIndex] = (playerPositions[currentPlayerIndex] + steps) % path.size();
     auto [row, col] = path[playerPositions[currentPlayerIndex]];
     players[currentPlayerIndex]->moveTo(boardLayout, row, col);
+
+    int ind = playerPositions[currentPlayerIndex];
+
+    connect(ui -> monopoly, &QPushButton::clicked, this, [this, ind]() {showHouseManagementDialog(ind);});
 
     if (playerPositions[currentPlayerIndex] < oldPosition && playerPositions[currentPlayerIndex] != 10) {
         playerStates[currentPlayerIndex].money += 200;
@@ -617,7 +602,7 @@ void GameWindow::move_player(int steps)
         updatePlayerInfoDisplay();
     }
 
-    qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
+  //  qDebug() << "Игрок переместился на позицию" << playerPositions[currentPlayerIndex];
     check_cell_type();
 }
 
@@ -1553,7 +1538,7 @@ void GameWindow::showHouseManagementDialog(int cellIndex)
 
     layout->addLayout(buttonLayout);
 
-    connect(ui -> build_houses, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+    connect(buildButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
         buildHouse(cellIndex);
         dialog.accept();
 
@@ -1567,7 +1552,7 @@ void GameWindow::showHouseManagementDialog(int cellIndex)
         }
     });
 
-    connect(ui -> sell_house, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
+    connect(sellButton, &QPushButton::clicked, this, [this, cellIndex, &dialog]() {
         sellHouse(cellIndex);
         dialog.accept();
 
